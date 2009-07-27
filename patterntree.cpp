@@ -827,6 +827,9 @@ PatternTree::PatternTree ( PatternTree &parenttree, unsigned int legindex ) {
 }
 
 void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
+
+  cout << "PW size: " << parentwalk->nodewalk.size() << endl;
+
   fm::statistics->patternsize++;
   if ( fm::statistics->patternsize > (int) fm::statistics->frequenttreenumbers.size () ) {
     fm::statistics->frequenttreenumbers.resize ( fm::statistics->patternsize, 0 );
@@ -855,9 +858,7 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
   vector<GSWalk*> siblingwalks;
   for ( int i = legs.size () - 1; i >= 0; i-- ) {
 
-
     GSWalk* gsw = new GSWalk(); // allocate walk for sibling
-
 
     // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);

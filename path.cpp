@@ -629,6 +629,8 @@ void Path::expand2 (pair<float,string> max) {
   vector<GSWalk*> siblingwalks;
   GSWalk* parentwalk = new GSWalk();
 
+  cout << "PW size: " << parentwalk->nodewalk.size() << endl;
+
   for ( unsigned int i = 0; i < legs.size (); i++ ) {
     PathTuple &tuple = legs[i]->tuple;
     if ( tuple.depth != nodelabels.size () - 1 ) {

@@ -368,9 +368,8 @@ void GraphState::print ( GSWalk* gsw ) {
       GraphState::GSEdge &edge = nodes[i].edges[j];
 
       if ( i < edge.tonode ) {
-        gsw->edgewalk.push_back(
-          (GSWEdge) {(NodeLabel) i, (NodeLabel) edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), fm::chisq->fa_set, fm::chisq->fi_set}
-          );
+        gsw->edgewalk[i] = 
+          (GSWEdge) {(NodeLabel) edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), fm::chisq->fa_set, fm::chisq->fi_set};
       }
     }
   }
@@ -1361,8 +1360,40 @@ void GraphState::puti ( FILE *f, int i ) {
   } while ( k ); 
 }
 
-int GSWalk::cd (GSWalk* pred, GSWalk* parent) {
-    NodeLabel core_border = (parent->nodewalk).size()-1;
-    return 1;
-}
+int GSWalk::cd (GSWalk* p, GSWalk* s) {
 
+    int core_border = (p->nodewalk).size(); // 0 - core_border: these nodes and their connecting edges won't change
+    if (core_border < 1) return 0; // parent was the empty one allocated in path.cpp
+    et_ge_es = true;
+    et_le_es = true;
+    et_eq_es = true;
+    
+    // get refined edges from this
+    for (int j=0; j < core_border-1; j++) {
+        GSWEdge et = edgemap[j];
+        GSWEdge es = s->edgemap[j];
+        
+        // this >= sibling ?
+        if (!include(et->labs, es->labs)) {
+            et_ge_es = false;
+            break;
+
+            // sibling >= this ?
+            if (!include(et->labs, es->labs)) {
+                et_le_es = false;
+                break;
+            }
+        }
+
+        // this == sibling ?
+        else {
+            if (et->labs.size() == es->labs.size())
+                et_eq_es = false;
+        }
+
+
+
+    }
+    
+    return core_border;
+}

@@ -130,9 +130,8 @@ struct GSWNode {
 };
 
 struct GSWEdge {
-    //      e    <from>  <to>    <edgelabels>    <occurrences active>    <occurrences inactive>
-    // e.g. e    0       1       <2, 1>          {0, 1}                  {2, 3}
-    NodeLabel from;
+    //      e    <to>    <edgelabels>    <occurrences active>    <occurrences inactive>
+    // e.g. e    1       <2, 1>          {0, 1}                  {2, 3}
     NodeLabel to;
     vector<InputEdgeLabel> labs;
     set<Tid> a;
@@ -140,11 +139,11 @@ struct GSWEdge {
 };
 
 class GSWalk {
-  typedef vector<GSWNode> nodevector; // position represents id
-  typedef vector<GSWEdge> edgevector;
+  typedef vector<GSWNode> nodevector;      // position represents id
+  typedef map<NodeLabel, GSWEdge> edgemap; // key is id of from-node
   public:
       nodevector nodewalk;
-      edgevector edgewalk;
+      edgemap edgewalk;
       int cd (GSWalk* pred, GSWalk* parent);
 };
 
