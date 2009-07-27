@@ -122,9 +122,8 @@ class GraphState {
 };
 
 struct GSWNode {
-    //      v    <node>    <nodelabels>   <occurrences active>    <occurrences inactive>
-    // e.g. v    0         <6, 7>         {0, 1}                  {2, 3}
-    NodeLabel id;
+    //      v    <nodelabels>   <occurrences active>    <occurrences inactive>
+    // e.g. v    <6, 7>         {0, 1}                  {2, 3}
     vector<InputNodeLabel> labs;
     set<Tid> a;
     set<Tid> i;
@@ -141,12 +140,12 @@ struct GSWEdge {
 };
 
 class GSWalk {
-  typedef vector<GSWNode> nodevector;
+  typedef vector<GSWNode> nodevector; // position represents id
   typedef vector<GSWEdge> edgevector;
   public:
       nodevector nodewalk;
       edgevector edgewalk;
-      int cd (GSWalk* pred_sib);
+      int cd (GSWalk* pred, GSWalk* parent);
 };
 
 #endif

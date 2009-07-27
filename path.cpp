@@ -627,6 +627,8 @@ void Path::expand2 (pair<float,string> max) {
 
 
   vector<GSWalk*> siblingwalks;
+  GSWalk* parentwalk = new GSWalk();
+
   for ( unsigned int i = 0; i < legs.size (); i++ ) {
     PathTuple &tuple = legs[i]->tuple;
     if ( tuple.depth != nodelabels.size () - 1 ) {
@@ -654,7 +656,7 @@ void Path::expand2 (pair<float,string> max) {
            if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
                fm::graphstate->print(gsw); // print to graphstate walk
                for (int j=0; j<siblingwalks.size(); j++) {
-                  cout << "Sibling " << j << ", cd: " << gsw->cd(siblingwalks[j]) << "." << endl; // do conflict detection w all siblings
+                  cout << "Sibling " << j << ", cd: " << gsw->cd(parentwalk, siblingwalks[j]) << "." << endl; // do conflict detection w all siblings
                }
                siblingwalks.push_back(gsw); // store sibling walk
            }
@@ -707,6 +709,7 @@ void Path::expand2 (pair<float,string> max) {
     }
   }
   each(siblingwalks) delete siblingwalks[i];
+  delete parentwalk;
 
 
   fm::updated=uptmp;

@@ -358,7 +358,7 @@ void GraphState::print ( GSWalk* gsw ) {
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     gsw->nodewalk.push_back( 
-       (GSWNode) {(InputNodeLabel) i,  vector<InputNodeLabel> (fm::database->nodelabels[nodes[i].label].inputlabel), fm::chisq->fa_set, fm::chisq->fi_set}
+       (GSWNode) {vector<InputNodeLabel> (fm::database->nodelabels[nodes[i].label].inputlabel), fm::chisq->fa_set, fm::chisq->fi_set}
     );
   }
 
@@ -1361,16 +1361,8 @@ void GraphState::puti ( FILE *f, int i ) {
   } while ( k ); 
 }
 
-int GSWalk::cd (GSWalk* pred_sib) {
+int GSWalk::cd (GSWalk* pred, GSWalk* parent) {
+    NodeLabel core_border = (parent->nodewalk).size()-1;
     return 1;
-    /*
-    pair< edgevector::iterator, edgevector::iterator> mypair;
-    if (edgewalk.size()!=pred_sib->edgewalk.size()) { cerr << "Error! Siblings of different size. (" << edgewalk.size() << ", " << pred_sib->edgewalk.size() << ")" << endl; }
-    mypair = mismatch (edgewalk.begin(), edgewalk.end(), pred_sib->edgewalk.begin());
-    if (mypair.first!=edgewalk.end()) { mypair.first++; mypair.second++; }
-    else return 3;
-    mypair = mismatch (mypair.first, edgewalk.end(), mypair.second);
-    if (mypair.first!=edgewalk.end()) return 1;
-    else return 2;
-    */
 }
+
