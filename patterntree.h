@@ -37,6 +37,8 @@ using namespace std;
 extern bool updated;
 extern unsigned int minfreq;
 
+class GSWalk;
+
 struct Tuple {
   Depth depth;
   EdgeLabel label;
@@ -62,7 +64,7 @@ class PatternTree {
   public:
     PatternTree ( Path &path, unsigned int legindex );
     ~PatternTree ();
-    void expand (pair<float, string> max);
+    void expand (pair<float, string> max, GSWalk* mywalk);
     vector<LegPtr> legs; // pointers used to avoid copy-constructor during a resize of the vector
   private:
     void checkIfIndeedNormal ();

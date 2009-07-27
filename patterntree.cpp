@@ -826,7 +826,7 @@ PatternTree::PatternTree ( PatternTree &parenttree, unsigned int legindex ) {
   }
 }
 
-void PatternTree::expand (pair<float, string> max) {
+void PatternTree::expand (pair<float, string> max, GSWalk* mywalk) {
   fm::statistics->patternsize++;
   if ( fm::statistics->patternsize > (int) fm::statistics->frequenttreenumbers.size () ) {
     fm::statistics->frequenttreenumbers.resize ( fm::statistics->patternsize, 0 );
@@ -854,7 +854,10 @@ void PatternTree::expand (pair<float, string> max) {
 
   vector<GSWalk*> siblingwalks;
   for ( int i = legs.size () - 1; i >= 0; i-- ) {
-    cout << "Siblings: " << siblingwalks.size() << " / " << legs.size() << endl;
+
+
+    GSWalk* gsw = new GSWalk(); // allocate walk for sibling
+
 
     // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
@@ -866,12 +869,11 @@ void PatternTree::expand (pair<float, string> max) {
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
        if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-           GSWalk* gsw = new GSWalk();
-           fm::graphstate->print(gsw);
+           fm::graphstate->print(gsw); // print to graphstate walk
            for (int j=0; j<siblingwalks.size(); j++) {
-              cout << "Sibling " << j << ", cd: " << gsw->cd(siblingwalks[j]) << "." << endl;
+              cout << "Sibling " << j << ", cd: " << gsw->cd(siblingwalks[j]) << "." << endl; // do conflict detection w all siblings
            }
-           siblingwalks.push_back(gsw);
+           siblingwalks.push_back(gsw); // store sibling walk
        }
 
        if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
@@ -902,8 +904,8 @@ void PatternTree::expand (pair<float, string> max) {
             else fm::graphstate->print(legs[i]->occurrences.frequency);
         }
 
-        if (fm::chisq->p > max.first) { fm::updated = true; p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency))); }
-        else p.expand (max);
+        if (fm::chisq->p > max.first) { fm::updated = true; p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
+        else p.expand (max, gsw);
     }
     else {
         if (fm::do_backbone && fm::updated) {

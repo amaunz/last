@@ -516,12 +516,14 @@ void Path::expand2 (pair<float,string> max) {
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
         // TO BE REMOVED AGAIN
+        #ifdef DEBUG
         fm::do_yaml=true;
         fm::gsp_out=false;
         string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
         if (s.find("C-C=C-O-C-N")!=string::npos) { die=true; }
         fm::do_yaml=false;
         fm::gsp_out=true;
+        #endif
         // TO BE REMOVED AGAIN
 
         if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[index]->occurrences.frequency);
@@ -636,8 +638,13 @@ void Path::expand2 (pair<float,string> max) {
  	      ( legs[i]->tuple.depth != 1 || legs[i]->tuple.edgelabel >= edgelabels[0] ) &&
 	      ( legs[i]->tuple.depth != nodelabels.size () - 2 || legs[i]->tuple.edgelabel >= edgelabels.back () ) &&
 	        fm::type > 1 ) {
+
+          GSWalk* gsw = new GSWalk(); // allocate walk for sibling
+
+
           // Calculate chisq
           if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
+
           // GRAPHSTATE
           fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
 
@@ -645,16 +652,16 @@ void Path::expand2 (pair<float,string> max) {
           if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
            if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-               GSWalk* gsw = new GSWalk();
-               fm::graphstate->print(gsw);
+               fm::graphstate->print(gsw); // print to graphstate walk
                for (int j=0; j<siblingwalks.size(); j++) {
-                  cout << "Sibling " << j << ", cd: " << gsw->cd(siblingwalks[j]) << "." << endl;
+                  cout << "Sibling " << j << ", cd: " << gsw->cd(siblingwalks[j]) << "." << endl; // do conflict detection w all siblings
                }
-               siblingwalks.push_back(gsw);
+               siblingwalks.push_back(gsw); // store sibling walk
            }
 
-             if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
-             else fm::graphstate->print(legs[i]->occurrences.frequency);
+           if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
+           else fm::graphstate->print(legs[i]->occurrences.frequency);
+
           }
 
           // RECURSE
@@ -680,8 +687,8 @@ void Path::expand2 (pair<float,string> max) {
                 else fm::graphstate->print(legs[i]->occurrences.frequency);
             }
 
-            if (max.first<fm::chisq->p) { fm::updated = true; tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency))); }
-            else tree.expand (max);
+            if (max.first<fm::chisq->p) { fm::updated = true; tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
+            else tree.expand (max, gsw);
           }
 
           else {

@@ -121,14 +121,28 @@ class GraphState {
     void puti(FILE* f, int i);
 };
 
-class GSWalk {
-  typedef vector< pair< pair<int, int>, InputEdgeLabel> > edgevector;
-              //      e    <from>,  <to>,    <edgelabel>
-              // e.g. e    0        1        2
-  typedef vector< pair<NodeLabel, InputNodeLabel> > nodevector;
-           //      v    <node>,    <nodelabel>
-           // e.g. v    0          1
+struct GSWNode {
+    //      v    <node>    <nodelabels>   <occurrences active>    <occurrences inactive>
+    // e.g. v    0         <6, 7>         {0, 1}                  {2, 3}
+    NodeLabel id;
+    vector<InputNodeLabel> labs;
+    set<Tid> a;
+    set<Tid> i;
+};
 
+struct GSWEdge {
+    //      e    <from>  <to>    <edgelabels>    <occurrences active>    <occurrences inactive>
+    // e.g. e    0       1       <2, 1>          {0, 1}                  {2, 3}
+    NodeLabel from;
+    NodeLabel to;
+    vector<InputEdgeLabel> labs;
+    set<Tid> a;
+    set<Tid> i;
+};
+
+class GSWalk {
+  typedef vector<GSWNode> nodevector;
+  typedef vector<GSWEdge> edgevector;
   public:
       nodevector nodewalk;
       edgevector edgewalk;

@@ -355,14 +355,22 @@ void GraphState::print ( FILE *f ) {
 // GENERATE VECTOR REPRESENTATIONS FOR LATENT STRUCTURE MINING
 
 void GraphState::print ( GSWalk* gsw ) {
+
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
-    gsw->nodewalk.push_back(make_pair(i,fm::database->nodelabels[nodes[i].label].inputlabel));
+    gsw->nodewalk.push_back( 
+       (GSWNode) {(InputNodeLabel) i,  vector<InputNodeLabel> (fm::database->nodelabels[nodes[i].label].inputlabel), fm::chisq->fa_set, fm::chisq->fi_set}
+    );
   }
+
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     for ( int j = 0; j < (int) nodes[i].edges.size (); j++ ) {
+
       GraphState::GSEdge &edge = nodes[i].edges[j];
+
       if ( i < edge.tonode ) {
-        gsw->edgewalk.push_back  (       make_pair(     make_pair(i,(int) edge.tonode),     (int) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel     ) );
+        gsw->edgewalk.push_back(
+          (GSWEdge) {(NodeLabel) i, (NodeLabel) edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), fm::chisq->fa_set, fm::chisq->fi_set}
+          );
       }
     }
   }
@@ -1354,6 +1362,8 @@ void GraphState::puti ( FILE *f, int i ) {
 }
 
 int GSWalk::cd (GSWalk* pred_sib) {
+    return 1;
+    /*
     pair< edgevector::iterator, edgevector::iterator> mypair;
     if (edgewalk.size()!=pred_sib->edgewalk.size()) { cerr << "Error! Siblings of different size. (" << edgewalk.size() << ", " << pred_sib->edgewalk.size() << ")" << endl; }
     mypair = mismatch (edgewalk.begin(), edgewalk.end(), pred_sib->edgewalk.begin());
@@ -1362,4 +1372,5 @@ int GSWalk::cd (GSWalk* pred_sib) {
     mypair = mismatch (mypair.first, edgewalk.end(), mypair.second);
     if (mypair.first!=edgewalk.end()) return 1;
     else return 2;
+    */
 }
