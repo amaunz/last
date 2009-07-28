@@ -123,19 +123,23 @@ class GraphState {
 
 struct GSWNode {
     //      v    <nodelabels>   <occurrences active>    <occurrences inactive>
-    // e.g. v    <6, 7>         {0, 1}                  {2, 3}
+    // e.g. v    <6, 7>         {0->2, 1->3}            {2, 3}
+    // meaning                  T. 0 covered by 2 f.
+    //                          in this node 
     vector<InputNodeLabel> labs;
-    set<Tid> a;
-    set<Tid> i;
+    map<Tid, int> a;
+    map<Tid, int> i;
 };
 
 struct GSWEdge {
     //      e    <to>    <edgelabels>    <occurrences active>    <occurrences inactive>
-    // e.g. e    1       <2, 1>          {0, 1}                  {2, 3}
+    // e.g. e    1       <2, 1>          {0->2, 1->3}            {2, 3}
+    // meaning                           T. 0 covered by 2 f.
+    //                                   on this edge 
     NodeLabel to;
     vector<InputEdgeLabel> labs;
-    set<Tid> a;
-    set<Tid> i;
+    map<Tid, int> a;
+    map<Tid, int> i;
 };
 
 class GSWalk {

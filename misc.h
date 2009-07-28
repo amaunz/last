@@ -55,6 +55,8 @@ typedef unsigned int Frequency;
 #define store(a,b) { if ( (b).elements.capacity () - (b).elements.size () > (b).elements.size () / 2 ) (a) = (b); else swap ( (a), (b) ); }
 
 #define each(_vector) for (int i = 0 ; i < (int) ( _vector ).size() ; i++ )
+#define each_it(_vector, _it_type) for (_it_type it = _vector.begin(); it!=_vector.end(); it++ )
+
 #define maxi(a, b) ( (a)>(b) ? (a) : (b) )
 
 extern int level; // 3 : all, 2 : paths and trees, 1 : paths

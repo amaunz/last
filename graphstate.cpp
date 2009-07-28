@@ -356,20 +356,23 @@ void GraphState::print ( FILE *f ) {
 
 void GraphState::print ( GSWalk* gsw ) {
 
+  // convert occurrence lists to weight maps with initial weight 1
+
+  map<Tid, int> weightmap_a; 
+  each_it(fm::chisq->fa_set, set<Tid>::iterator) weightmap_a.insert(make_pair((*it),1));
+  
+  map<Tid, int> weightmap_i;
+  each_it(fm::chisq->fi_set, set<Tid>::iterator) weightmap_i.insert(make_pair((*it),1));
+
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
-    gsw->nodewalk.push_back( 
-       (GSWNode) {vector<InputNodeLabel> (fm::database->nodelabels[nodes[i].label].inputlabel), fm::chisq->fa_set, fm::chisq->fi_set}
-    );
+    gsw->nodewalk.push_back( (GSWNode) {vector<InputNodeLabel> (fm::database->nodelabels[nodes[i].label].inputlabel), weightmap_a, weightmap_i} );
   }
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     for ( int j = 0; j < (int) nodes[i].edges.size (); j++ ) {
-
       GraphState::GSEdge &edge = nodes[i].edges[j];
-
       if ( i < edge.tonode ) {
-        gsw->edgewalk[i] = 
-          (GSWEdge) {(NodeLabel) edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), fm::chisq->fa_set, fm::chisq->fi_set};
+        gsw->edgewalk[i] = (GSWEdge) {(NodeLabel) edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), weightmap_a, weightmap_i};
       }
     }
   }
@@ -1364,22 +1367,22 @@ int GSWalk::cd (GSWalk* p, GSWalk* s) {
 
     int core_border = (p->nodewalk).size(); // 0 - core_border: these nodes and their connecting edges won't change
     if (core_border < 1) return 0; // parent was the empty one allocated in path.cpp
-    et_ge_es = true;
-    et_le_es = true;
-    et_eq_es = true;
+    bool et_ge_es = true;
+    bool et_le_es = true;
+    bool et_eq_es = true;
     
     // get refined edges from this
     for (int j=0; j < core_border-1; j++) {
-        GSWEdge et = edgemap[j];
-        GSWEdge es = s->edgemap[j];
+        GSWEdge et = edgewalk[j];
+        GSWEdge es = s->edgewalk[j];
         
         // this >= sibling ?
-        if (!include(et->labs, es->labs)) {
+        if (!includes(et.labs.begin(), et.labs.end(), es.labs.begin(), es.labs.end())) {
             et_ge_es = false;
             break;
 
             // sibling >= this ?
-            if (!include(et->labs, es->labs)) {
+            if (!includes(es.labs.begin(), es.labs.end(), et.labs.begin(), et.labs.end())) {
                 et_le_es = false;
                 break;
             }
@@ -1387,7 +1390,7 @@ int GSWalk::cd (GSWalk* p, GSWalk* s) {
 
         // this == sibling ?
         else {
-            if (et->labs.size() == es->labs.size())
+            if (et.labs.size() == es.labs.size())
                 et_eq_es = false;
         }
 
