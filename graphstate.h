@@ -122,7 +122,7 @@ class GraphState {
 };
 
 struct GSWNode {
-    //      v    <nodelabels>   <occurrences active>    <occurrences inactive>
+    //      v    <labs>         <occurrences active>    <occurrences inactive>
     // e.g. v    <6, 7>         {0->2, 1->3}            {2, 3}
     // meaning                  T. 0 covered by 2 f.
     //                          in this node 
@@ -132,7 +132,7 @@ struct GSWNode {
 };
 
 struct GSWEdge {
-    //      e    <to>    <edgelabels>    <occurrences active>    <occurrences inactive>
+    //      e    <to>    <labs>          <occurrences active>    <occurrences inactive>
     // e.g. e    1       <2, 1>          {0->2, 1->3}            {2, 3}
     // meaning                           T. 0 covered by 2 f.
     //                                   on this edge 
@@ -144,9 +144,9 @@ struct GSWEdge {
 };
 
 class GSWalk {
-  typedef vector<GSWNode> nodevector;      // position represents id
-  typedef map<int, vector<GSWEdge> > edgemap; // key is id of from-node
   public:
+      typedef vector<GSWNode> nodevector;      // position represents id
+      typedef map<int, vector<GSWEdge> > edgemap; // key is id of from-node
       nodevector nodewalk;
       edgemap edgewalk;
       int cd (int core_border, GSWalk* parent);

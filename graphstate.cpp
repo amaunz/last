@@ -372,10 +372,12 @@ void GraphState::print ( GSWalk* gsw ) {
     for ( int j = 0; j < (int) nodes[i].edges.size (); j++ ) {
       GraphState::GSEdge &edge = nodes[i].edges[j];
       if ( i < edge.tonode ) {
-        gsw->edgewalk[i].push_back( (GSWEdge) { edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), weightmap_a, weightmap_i} );
+          vector<InputEdgeLabel> iel; iel.push_back((InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel);
+          gsw->edgewalk[i].push_back( (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i } );
       }
     }
   }
+
 }
 
 
@@ -1374,54 +1376,101 @@ class GetTo {
 int GSWalk::cd (int core_border, GSWalk* s) {
 
     if (core_border < 1) return 0; // parent was the empty one allocated in path.cpp
+
+    /*
     bool edges_equal = true;
     bool edges_subsets = true;
+    */
+    bool cd1, cd2;
+    cd1 = cd2 = false;
     
     // get refined edges from this
-    for (int j=0; j < core_border-1; j++) {
+    for (int j=0; j < core_border; j++) {
 
         vector<GSWEdge> et = edgewalk[j];
         vector<GSWEdge> es = s->edgewalk[j];
 
-        // Get 'to' values of all edges leaving j
+        // Get values of all edges leaving j
         vector<int> tot;
-        each_it(et, vector<GSWEdge>::iterator)
-            tot.push_back(it->to);
+        vector<vector<InputEdgeLabel> > labst;
+        each_it(et, vector<GSWEdge>::iterator) {
+            tot.push_back(it->to);      // to
+            labst.push_back(it->labs);  // labels
+        }
 
-        cout << "TO: ";
-        each(tot) cout << tot[i];
-        cout << endl;
-    
+        /*
+        cout << j << ": "; each(tot) cout << tot[i]; cout << endl;
+        for (vector<vector<InputEdgeLabel> >::iterator it=labst.begin(); it!=labst.end(); it++) {
+            for (vector<InputEdgeLabel>::iterator it2=it->begin(); it2!=it->end(); it2++) {
+                cout << (*it2) << " ";
+            }
+            cout << endl;
+        }
+        */
+
         vector<int> tos; 
-        each_it(es, vector<GSWEdge>::iterator)
+        vector<vector<InputEdgeLabel> > labss;
+        each_it(es, vector<GSWEdge>::iterator) {
             tos.push_back(it->to);
+            labss.push_back(it->labs);
+        }
 
-        cout << "TO: ";
-        each(tos) cout << tos[i];
-        cout << endl;
+        /*
+        cout << j << ": "; each(tos) cout << tos[i]; cout << endl;
+        for (vector<vector<InputEdgeLabel> >::iterator it=labss.begin(); it!=labss.end(); it++) {
+            for (vector<InputEdgeLabel>::iterator it2=it->begin(); it2!=it->end(); it2++) {
+                cout << (*it2) << " ";
+            }
+            cout << endl;
+        }
+        */
 
-        
-    /*
-        // this >= sibling ?
-        if (equal(tot.begin(), tot.end(), tos.begin())) continue;
-        else edges_equal = false;
+        // Node refinements happened at different locations
+        if (tot.size() != tos.size()) {
+           cd1 = true; // no conflict
+           break;
+        }
 
+        // Else check for unequal edge labels
+        else {
+            if (!equal(labst.begin(), labst.end(), labss.begin())) {
+                cd2 = true; // edge conflict
+                break;
+            }
+        }
+
+/*
         if (!(includes(tot.begin(), tot.end(), tos.begin(), tos.end()) || 
              includes(tos.begin(), tos.end(), tot.begin(), tot.end()))) {
+               edges_equal = false;
                edges_subsets = false;
                break;
         }
-    */
+        else {
+            if (tot.size() != tos.size()) {
+               edges_equal = false;
+            }
+        }
+*/
 
     }
+
+    if (cd1) return 1;
+    if (cd2) return 2;
+    else return 3;
+
 
     // CD1: no conflict
     // CD2: conflict
     // CD3: all equal -> node conflict
+    /*
     if (edges_equal) return 3;
     else { 
         if (edges_subsets) return 1;
         else return 2;
     }
+    */
+
+    
     
 }
