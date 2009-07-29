@@ -1377,10 +1377,6 @@ int GSWalk::cd (int core_border, GSWalk* s) {
 
     if (core_border < 1) return 0; // parent was the empty one allocated in path.cpp
 
-    /*
-    bool edges_equal = true;
-    bool edges_subsets = true;
-    */
     bool cd1, cd2;
     cd1 = cd2 = false;
     
@@ -1398,32 +1394,12 @@ int GSWalk::cd (int core_border, GSWalk* s) {
             labst.push_back(it->labs);  // labels
         }
 
-        /*
-        cout << j << ": "; each(tot) cout << tot[i]; cout << endl;
-        for (vector<vector<InputEdgeLabel> >::iterator it=labst.begin(); it!=labst.end(); it++) {
-            for (vector<InputEdgeLabel>::iterator it2=it->begin(); it2!=it->end(); it2++) {
-                cout << (*it2) << " ";
-            }
-            cout << endl;
-        }
-        */
-
         vector<int> tos; 
         vector<vector<InputEdgeLabel> > labss;
         each_it(es, vector<GSWEdge>::iterator) {
             tos.push_back(it->to);
             labss.push_back(it->labs);
         }
-
-        /*
-        cout << j << ": "; each(tos) cout << tos[i]; cout << endl;
-        for (vector<vector<InputEdgeLabel> >::iterator it=labss.begin(); it!=labss.end(); it++) {
-            for (vector<InputEdgeLabel>::iterator it2=it->begin(); it2!=it->end(); it2++) {
-                cout << (*it2) << " ";
-            }
-            cout << endl;
-        }
-        */
 
         // Node refinements happened at different locations
         if (tot.size() != tos.size()) {
@@ -1439,38 +1415,10 @@ int GSWalk::cd (int core_border, GSWalk* s) {
             }
         }
 
-/*
-        if (!(includes(tot.begin(), tot.end(), tos.begin(), tos.end()) || 
-             includes(tos.begin(), tos.end(), tot.begin(), tot.end()))) {
-               edges_equal = false;
-               edges_subsets = false;
-               break;
-        }
-        else {
-            if (tot.size() != tos.size()) {
-               edges_equal = false;
-            }
-        }
-*/
-
     }
 
     if (cd1) return 1;
     if (cd2) return 2;
-    else return 3;
+    return 3;
 
-
-    // CD1: no conflict
-    // CD2: conflict
-    // CD3: all equal -> node conflict
-    /*
-    if (edges_equal) return 3;
-    else { 
-        if (edges_subsets) return 1;
-        else return 2;
-    }
-    */
-
-    
-    
 }
