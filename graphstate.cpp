@@ -372,7 +372,7 @@ void GraphState::print ( GSWalk* gsw ) {
     for ( int j = 0; j < (int) nodes[i].edges.size (); j++ ) {
       GraphState::GSEdge &edge = nodes[i].edges[j];
       if ( i < edge.tonode ) {
-        gsw->edgewalk[i] = (GSWEdge) {(NodeLabel) edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), weightmap_a, weightmap_i};
+        gsw->edgewalk[i].push_back( (GSWEdge) { edge.tonode , vector<InputEdgeLabel> ( (InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel), weightmap_a, weightmap_i} );
       }
     }
   }
@@ -1363,40 +1363,65 @@ void GraphState::puti ( FILE *f, int i ) {
   } while ( k ); 
 }
 
-int GSWalk::cd (GSWalk* p, GSWalk* s) {
+class GetTo {
+  public: 
+    int gt (GSWEdge e) { 
+        return e.to;
+    } 
+};
 
-    int core_border = (p->nodewalk).size(); // 0 - core_border: these nodes and their connecting edges won't change
+
+int GSWalk::cd (int core_border, GSWalk* s) {
+
     if (core_border < 1) return 0; // parent was the empty one allocated in path.cpp
-    bool et_ge_es = true;
-    bool et_le_es = true;
-    bool et_eq_es = true;
+    bool edges_equal = true;
+    bool edges_subsets = true;
     
     // get refined edges from this
     for (int j=0; j < core_border-1; j++) {
-        GSWEdge et = edgewalk[j];
-        GSWEdge es = s->edgewalk[j];
+
+        vector<GSWEdge> et = edgewalk[j];
+        vector<GSWEdge> es = s->edgewalk[j];
+
+        // Get 'to' values of all edges leaving j
+        vector<int> tot;
+        each_it(et, vector<GSWEdge>::iterator)
+            tot.push_back(it->to);
+
+        cout << "TO: ";
+        each(tot) cout << tot[i];
+        cout << endl;
+    
+        vector<int> tos; 
+        each_it(es, vector<GSWEdge>::iterator)
+            tos.push_back(it->to);
+
+        cout << "TO: ";
+        each(tos) cout << tos[i];
+        cout << endl;
+
         
+    /*
         // this >= sibling ?
-        if (!includes(et.labs.begin(), et.labs.end(), es.labs.begin(), es.labs.end())) {
-            et_ge_es = false;
-            break;
+        if (equal(tot.begin(), tot.end(), tos.begin())) continue;
+        else edges_equal = false;
 
-            // sibling >= this ?
-            if (!includes(es.labs.begin(), es.labs.end(), et.labs.begin(), et.labs.end())) {
-                et_le_es = false;
-                break;
-            }
+        if (!(includes(tot.begin(), tot.end(), tos.begin(), tos.end()) || 
+             includes(tos.begin(), tos.end(), tot.begin(), tot.end()))) {
+               edges_subsets = false;
+               break;
         }
-
-        // this == sibling ?
-        else {
-            if (et.labs.size() == es.labs.size())
-                et_eq_es = false;
-        }
-
-
+    */
 
     }
+
+    // CD1: no conflict
+    // CD2: conflict
+    // CD3: all equal -> node conflict
+    if (edges_equal) return 3;
+    else { 
+        if (edges_subsets) return 1;
+        else return 2;
+    }
     
-    return core_border;
 }
