@@ -365,7 +365,8 @@ void GraphState::print ( GSWalk* gsw ) {
   each_it(fm::chisq->fi_set, set<Tid>::iterator) weightmap_i.insert(make_pair((*it),1));
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
-    gsw->nodewalk.push_back( (GSWNode) {vector<InputNodeLabel> (fm::database->nodelabels[nodes[i].label].inputlabel), weightmap_a, weightmap_i} );
+    vector<InputNodeLabel> inl; inl.push_back(fm::database->nodelabels[nodes[i].label].inputlabel);
+    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i } );
   }
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
@@ -1373,52 +1374,61 @@ class GetTo {
 };
 
 
-int GSWalk::cd (int core_border, GSWalk* s) {
+int GSWalk::cd (GSWalk* p, GSWalk* s) {
 
-    if (core_border < 1) return 0; // parent was the empty one allocated in path.cpp
+    vector<int> core_ids; for (int i=0; i<p->nodewalk.size(); i++) core_ids.push_back(i);
+    if (core_ids.size() < 1) return 0; // parent was empty
 
-    bool cd1, cd2;
-    cd1 = cd2 = false;
+    int cd = 1; // default: no conflict
+    GSWalk c = GSWalk(*p); // create copy of parent
     
     // get refined edges from this
-    for (int j=0; j < core_border; j++) {
+    for (int j=0; j < core_ids.size(); j++) {
 
         vector<GSWEdge> et = edgewalk[j];
         vector<GSWEdge> es = s->edgewalk[j];
 
-        // Get values of all edges leaving j
+        // Get values of all node refinements leaving j
         vector<int> tot;
         vector<vector<InputEdgeLabel> > labst;
+        vector<vector<InputNodeLabel> > nodest;
         each_it(et, vector<GSWEdge>::iterator) {
             tot.push_back(it->to);      // to
-            labst.push_back(it->labs);  // labels
+            labst.push_back(it->labs);  // edge labels
+            nodest.push_back(nodewalk[it->to].labs); // node labels
         }
 
         vector<int> tos; 
         vector<vector<InputEdgeLabel> > labss;
+        vector<vector<InputNodeLabel> > nodess;
         each_it(es, vector<GSWEdge>::iterator) {
             tos.push_back(it->to);
             labss.push_back(it->labs);
+            nodess.push_back(s->nodewalk[it->to].labs);
         }
 
-        // Node refinements happened at different locations
-        if (tot.size() != tos.size()) {
-           cd1 = true; // no conflict
+        if ( !(
+                (includes(labst.begin(), labst.end(), labss.begin(), labss.end())) || 
+                (includes(labss.begin(), labss.end(), labst.begin(), labst.end()))
+              ) ) {
+           cd = 2; // edge conflict
            break;
         }
 
-        // Else check for unequal edge labels
-        else {
-            if (!equal(labst.begin(), labst.end(), labss.begin())) {
-                cd2 = true; // edge conflict
-                break;
-            }
+        if ( !(
+            (includes(nodest.begin(), nodest.end(), nodess.begin(), nodess.end())) || 
+            (includes(nodess.begin(), nodess.end(), nodest.begin(), nodest.end()))
+           ) ) {    
+          cd = 3; // node conflict
+          break;
         }
+
 
     }
 
-    if (cd1) return 1;
-    if (cd2) return 2;
-    return 3;
+    // cd1 merging possible
+    // cd2 edge conflict
+    // cd3 node conflict
+    return cd;
 
 }

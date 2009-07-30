@@ -140,7 +140,6 @@ struct GSWEdge {
     vector<InputEdgeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
-    int getTo() {return to;}
 };
 
 class GSWalk {
@@ -149,7 +148,7 @@ class GSWalk {
       typedef map<int, vector<GSWEdge> > edgemap; // key is id of from-node
       nodevector nodewalk;
       edgemap edgewalk;
-      int cd (int core_border, GSWalk* parent);
+      int cd (GSWalk* p, GSWalk* s);
 };
 
 #endif
