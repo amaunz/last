@@ -98,6 +98,4 @@ inline vector<string>& operator<<(vector<string>& res, string s) {
   return res;
 } 
 
-
-
 #endif

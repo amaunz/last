@@ -853,10 +853,11 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
         fm::updated = false;
   }
 
-  vector<GSWalk*> siblingwalks;
+  GSWalk* siblingwalk = new GSWalk();
+
   for ( int i = legs.size () - 1; i >= 0; i-- ) {
 
-    GSWalk* gsw = new GSWalk(); // allocate walk for sibling
+    GSWalk* gsw = new GSWalk();
 
     // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
@@ -868,11 +869,11 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
        if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-           fm::graphstate->print(gsw); // print to graphstate walk
-           for (int j=0; j<siblingwalks.size(); j++) {
-              cout << "Sibling " << j << ", cd: " << gsw->cd(parentwalk, siblingwalks[j]) << "." << endl; // do conflict detection w all siblings
-           }
-           siblingwalks.push_back(gsw); // store sibling walk
+           fm::graphstate->print(gsw);      // print to graphstate walk
+           vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
+           gsw->cd(core_ids, siblingwalk); // do conflict detection
+           //      ^^^^^^^^  ^^^^^^^^^^^
+           //      core      incremental
        }
 
        if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
@@ -922,14 +923,17 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
 
     fm::graphstate->deleteNode ();
 
+    delete gsw;
+
   }
-  each(siblingwalks) delete siblingwalks[i];
 
   if (fm::bbrc_sep && !fm::do_backbone && (legs.size()==0)) {
       if (fm::do_output) {
           if (!fm::console_out && fm::result->size() && (fm::result->back()!=fm::graphstate->sep())) (*fm::result) << fm::graphstate->sep();
       }
   }
+
+  delete siblingwalk;
 
   fm::statistics->patternsize--;
 

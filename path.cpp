@@ -501,11 +501,10 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
   bool die = false;
   
   // Grow Path forw
-  vector<GSWalk*> siblingwalks;
   for (unsigned int j=0; j<forwpathlegs.size() ; j++ ) {
     unsigned int index = forwpathlegs[j];
 
-    GSWalk* gsw = new GSWalk(); // allocate walk for sibling
+    GSWalk* gsw = new GSWalk();
 
     // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[index]->occurrences.elements);
@@ -531,7 +530,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
         
         if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            fm::graphstate->print(gsw); // print to graphstate walk
-           siblingwalks.push_back(gsw); // store sibling walk
         }
 
         if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[index]->occurrences.frequency);
@@ -570,10 +568,10 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
     }
 
     fm::graphstate->deleteNode ();
-  }
 
-  each(siblingwalks) delete siblingwalks[i];
-  siblingwalks.resize(0);
+    delete gsw;
+
+  }
 
   if (die) exit(0);
 
@@ -581,7 +579,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
   for (unsigned int j=0; j<backwpathlegs.size() ; j++ ) {
     unsigned int index = backwpathlegs[j];
     
-    GSWalk* gsw = new GSWalk(); // allocate walk for sibling
+    GSWalk* gsw = new GSWalk();
 
     // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[index]->occurrences.elements);
@@ -594,7 +592,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
 
         if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            fm::graphstate->print(gsw); // print to graphstate walk
-           siblingwalks.push_back(gsw); // store sibling walk
         }
 
         if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[index]->occurrences.frequency);
@@ -632,9 +629,9 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
 
     fm::graphstate->deleteNode ();
 
+    delete gsw;
+
   }
-  each(siblingwalks) delete siblingwalks[i];
-  siblingwalks.resize(0);
 
 
   bool uptmp = fm::updated;
@@ -642,6 +639,8 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
   if (fm::bbrc_sep && !fm::do_backbone && legs.size() > 0) {
       if (fm::do_output && !fm::console_out && fm::result->size() && (fm::result->back()!=fm::graphstate->sep())) (*fm::result) << fm::graphstate->sep();
   }
+
+  GSWalk* siblingwalk = new GSWalk();
 
   for ( unsigned int i = 0; i < legs.size (); i++ ) {
     PathTuple &tuple = legs[i]->tuple;
@@ -655,7 +654,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
 	      ( legs[i]->tuple.depth != nodelabels.size () - 2 || legs[i]->tuple.edgelabel >= edgelabels.back () ) &&
 	        fm::type > 1 ) {
 
-          GSWalk* gsw = new GSWalk(); // allocate walk for sibling
+          GSWalk* gsw = new GSWalk();
 
 
           // Calculate chisq
@@ -668,11 +667,13 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
           if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
            if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-               fm::graphstate->print(gsw); // print to graphstate walk
-               for (int j=0; j<siblingwalks.size(); j++) {
-                  cout << "Sibling " << j << ", cd: " << gsw->cd(parentwalk, siblingwalks[j]) << "." << endl; // do conflict detection w all siblings
-               }
-               siblingwalks.push_back(gsw); // store sibling walk
+               fm::graphstate->print(gsw);       // print to graphstate walk
+
+               vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
+               gsw->cd(core_ids, siblingwalk); // do conflict detection
+               //      ^^^^^^^^  ^^^^^^^^^^^
+               //      core      incremental
+
            }
 
            if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
@@ -718,12 +719,15 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
           }
 
 	      fm::graphstate->deleteNode ();
+
+          delete gsw;
+
         }
       }
     }
   }
-  each(siblingwalks) delete siblingwalks[i];
 
+  delete siblingwalk;
 
   fm::updated=uptmp;
     
@@ -743,9 +747,10 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
 
 void Path::expand () {
 
-  vector<GSWalk*> siblingwalks;
   for ( unsigned int i = 0; i < legs.size (); i++ ) {
-    GSWalk* gsw = new GSWalk(); // allocate walk for sibling
+
+    GSWalk* gsw = new GSWalk(); 
+
     PathTuple &tuple = legs[i]->tuple;
     if ( tuple.nodelabel >= nodelabels[0] ) {
         
@@ -757,8 +762,7 @@ void Path::expand () {
       if (!fm::most_specific_trees_only && fm::do_output && !fm::do_backbone && legs[i]->occurrences.frequency>=fm::minfreq) { 
 
           if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-            fm::graphstate->print(gsw);  // print to graphstate walk
-            siblingwalks.push_back(gsw); // store sibling walk
+             fm::graphstate->print(gsw);  // print to graphstate walk
           }
 
           if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
@@ -772,8 +776,10 @@ void Path::expand () {
       fm::graphstate->deleteNode ();
 
     }
+
+    delete gsw;    
+
   }
-  each(siblingwalks) delete siblingwalks[i];
   fm::graphstate->deleteStartNode ();
 
 

@@ -125,7 +125,7 @@ struct GSWNode {
     //      v    <labs>         <occurrences active>    <occurrences inactive>
     // e.g. v    <6, 7>         {0->2, 1->3}            {2, 3}
     // meaning                  T. 0 covered by 2 f.
-    //                          in this node 
+    //                          on this node 
     vector<InputNodeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
@@ -140,15 +140,34 @@ struct GSWEdge {
     vector<InputEdgeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
+    static bool lt_to (GSWEdge& e1, GSWEdge& e2){
+        if (e1.to < e2.to) return 1;
+        return 0;
+    }
+    static bool equal (GSWEdge* e1, GSWEdge* e2){
+        if ((e1->to == e2->to) && std::equal(e1->labs.begin(), e1->labs.end(), e2->labs.begin())) return 1;
+        return 0;
+    }
 };
 
 class GSWalk {
   public:
-      typedef vector<GSWNode> nodevector;      // position represents id
+      typedef vector<GSWNode> nodevector;      // position represents id, ids are always contiguous
       typedef map<int, vector<GSWEdge> > edgemap; // key is id of from-node
       nodevector nodewalk;
       edgemap edgewalk;
-      int cd (GSWalk* p, GSWalk* s);
+      nodevector temp_nodewalk;
+      edgemap temp_edgewalk;
+      int cd (vector<int> core_ids, GSWalk* s);
+      void print() {
+        each(nodewalk) {
+            cout << i << " " << nodewalk[i].labs[0] << endl;
+            each_it(edgewalk[i], vector<GSWEdge>::iterator) {
+                cout << i << " " << it->to << " " << it->labs[0] << endl;
+            }
+        }
+      }
+      void remove_singular_edge(int from, GSWEdge e);
 };
 
 #endif

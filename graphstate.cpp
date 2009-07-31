@@ -1373,62 +1373,62 @@ class GetTo {
     } 
 };
 
+int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
 
-int GSWalk::cd (GSWalk* p, GSWalk* s) {
-
-    vector<int> core_ids; for (int i=0; i<p->nodewalk.size(); i++) core_ids.push_back(i);
     if (core_ids.size() < 1) return 0; // parent was empty
 
     int cd = 1; // default: no conflict
-    GSWalk c = GSWalk(*p); // create copy of parent
+
+    GSWalk* w1 = this;
+    GSWalk* w2 = s;
     
     // get refined edges from this
     for (int j=0; j < core_ids.size(); j++) {
 
-        vector<GSWEdge> et = edgewalk[j];
-        vector<GSWEdge> es = s->edgewalk[j];
+        // calculate edge difference
+        vector<GSWEdge> d12; d12.resize(abs((int) (w1->edgewalk[j].size() - w2->edgewalk[j].size())));
+        vector<GSWEdge> d21; d21.resize(d12.size());
+        vector<GSWEdge>::iterator it;
+        it=set_difference(w1->edgewalk[j].begin(), w1->edgewalk[j].end(), w2->edgewalk[j].begin(), w2->edgewalk[j].end(), d12.begin(), GSWEdge::lt_to);
+        d12.resize((int) (it - d12.begin()));
+        it=set_difference(w2->edgewalk[j].begin(), w2->edgewalk[j].end(), w1->edgewalk[j].begin(), w1->edgewalk[j].end(), d21.begin(), GSWEdge::lt_to);
+        d21.resize((int) (it - d21.begin()));
+        // cout << "j: " << j << ", S1: " << d12.size() << ", S2: " << d21.size() << endl;
 
-        // Get values of all node refinements leaving j
-        vector<int> tot;
-        vector<vector<InputEdgeLabel> > labst;
-        vector<vector<InputNodeLabel> > nodest;
-        each_it(et, vector<GSWEdge>::iterator) {
-            tot.push_back(it->to);      // to
-            labst.push_back(it->labs);  // edge labels
-            nodest.push_back(nodewalk[it->to].labs); // node labels
+
+        vector<GSWEdge>* l = &d12; vector<GSWEdge>* s = &d21; if (d12.size() < d21.size()) swap(l,s);
+        
+        while (l->size()>s->size()) {
+           vector<GSWEdge>::iterator m = max_element(l->begin(), l->end(), GSWEdge::lt_to);
+           temp_edgewalk[j].push_back(*m);
         }
-
-        vector<int> tos; 
-        vector<vector<InputEdgeLabel> > labss;
-        vector<vector<InputNodeLabel> > nodess;
-        each_it(es, vector<GSWEdge>::iterator) {
-            tos.push_back(it->to);
-            labss.push_back(it->labs);
-            nodess.push_back(s->nodewalk[it->to].labs);
-        }
-
-        if ( !(
-                (includes(labst.begin(), labst.end(), labss.begin(), labss.end())) || 
-                (includes(labss.begin(), labss.end(), labst.begin(), labst.end()))
-              ) ) {
-           cd = 2; // edge conflict
-           break;
-        }
-
-        if ( !(
-            (includes(nodest.begin(), nodest.end(), nodess.begin(), nodess.end())) || 
-            (includes(nodess.begin(), nodess.end(), nodest.begin(), nodest.end()))
-           ) ) {    
-          cd = 3; // node conflict
-          break;
-        }
-
+        
 
     }
-
     // cd1 merging possible
     // cd2 edge conflict
     // cd3 node conflict
     return cd;
+
+}
+
+
+//! Removes a singular edge, i.e., with a free to-node
+//
+void GSWalk::remove_singular_edge (int from, GSWEdge e) {
+  // remove e.to from nodewalk
+  nodewalk.erase(nodewalk.begin() + e.to);
+
+  // remove e from edgewalk (only edge involved w e.to)
+  each_it(edgewalk[from], vector<GSWEdge>::iterator) {
+    if (it->to == e.to) edgewalk[from].erase(it);
+  }
+
+  // decrease all node ids > e.to
+  for (int k=0;k<edgewalk.size();k++) {
+      each_it(edgewalk[k], vector<GSWEdge>::iterator) {
+        if (it->to > e.to) it->to = it->to-1;
+      }
+  }
 
 }
