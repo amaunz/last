@@ -374,7 +374,7 @@ void GraphState::print ( GSWalk* gsw ) {
       GraphState::GSEdge &edge = nodes[i].edges[j];
       if ( i < edge.tonode ) {
           vector<InputEdgeLabel> iel; iel.push_back((InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel);
-          gsw->edgewalk[i].push_back( (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i } );
+          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i } ;
       }
     }
   }
@@ -1386,22 +1386,27 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
     for (int j=0; j < core_ids.size(); j++) {
 
         // calculate edge difference
-        vector<GSWEdge> d12; d12.resize(abs((int) (w1->edgewalk[j].size() - w2->edgewalk[j].size())));
-        vector<GSWEdge> d21; d21.resize(d12.size());
-        vector<GSWEdge>::iterator it;
-        it=set_difference(w1->edgewalk[j].begin(), w1->edgewalk[j].end(), w2->edgewalk[j].begin(), w2->edgewalk[j].end(), d12.begin(), GSWEdge::lt_to);
-        d12.resize((int) (it - d12.begin()));
-        it=set_difference(w2->edgewalk[j].begin(), w2->edgewalk[j].end(), w1->edgewalk[j].begin(), w1->edgewalk[j].end(), d21.begin(), GSWEdge::lt_to);
-        d21.resize((int) (it - d21.begin()));
+//        map<int, GSWEdge> d12; map<int, GSWEdge> d21;
+//        set_difference(w1->edgewalk[j].begin(), w1->edgewalk[j].end(), w2->edgewalk[j].begin(), w2->edgewalk[j].end(), d12.begin(), GSWEdge::lt_to);
+//        set_difference(w2->edgewalk[j].begin(), w2->edgewalk[j].end(), w1->edgewalk[j].begin(), w1->edgewalk[j].end(), d21.begin(), GSWEdge::lt_to);
         // cout << "j: " << j << ", S1: " << d12.size() << ", S2: " << d21.size() << endl;
 
+        /*
+        cout << "W1: " << w1->edgewalk.size() << endl;
+        cout << "W2: " << w2->edgewalk.size() << endl;
 
-        vector<GSWEdge>* l = &d12; vector<GSWEdge>* s = &d21; if (d12.size() < d21.size()) swap(l,s);
+        cout << "D12: " << d12.size() << endl;
+        cout << "D21: " << d21.size() << endl;
+        */
+
+//        map<int, GSWEdge>* l = &d12; map<int, GSWEdge>* s = &d21; if (d12.size() < d21.size()) swap(l,s);
         
+        /*
         while (l->size()>s->size()) {
            vector<GSWEdge>::iterator m = max_element(l->begin(), l->end(), GSWEdge::lt_to);
            temp_edgewalk[j].push_back(*m);
         }
+        */
         
 
     }
@@ -1415,20 +1420,59 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
 
 //! Removes a singular edge, i.e., with a free to-node
 //
-void GSWalk::remove_singular_edge (int from, GSWEdge e) {
-  // remove e.to from nodewalk
-  nodewalk.erase(nodewalk.begin() + e.to);
+void GSWalk::remove_singular_edge (int from, int to) {
+  // integrity constraint
+  if (to < nodewalk.size()) {
 
-  // remove e from edgewalk (only edge involved w e.to)
-  each_it(edgewalk[from], vector<GSWEdge>::iterator) {
-    if (it->to == e.to) edgewalk[from].erase(it);
-  }
+      // remove to from nodewalk
+      nodewalk.erase(nodewalk.begin() + to);
 
-  // decrease all node ids > e.to
-  for (int k=0;k<edgewalk.size();k++) {
-      each_it(edgewalk[k], vector<GSWEdge>::iterator) {
-        if (it->to > e.to) it->to = it->to-1;
+      // move all 'to'-node ids >to one down
+      for (edgemap::iterator it_from = edgewalk.begin(); it_from != edgewalk.end(); it_from++) {
+          for(map<int, GSWEdge>::iterator it_to=((it_from->second).begin()); 
+              it_to!=((it_from->second).end()); 
+              it_to++) {
+            if (it_to->second.to > to) it_to->second.to--;
+          }
       }
+
+      // remove the edge from-to
+      edgewalk[from].erase(to);
+
+      // move all edges with 'from' >to one down
+      for (int k=to;k<=nodewalk.size();k++) {
+          edgewalk[k] = edgewalk[k+1];
+      }
+
+  }
+}
+
+//! Adds an edge
+//
+void GSWalk::add_edge (int from, GSWEdge e, GSWNode n) {
+
+  if (e.to < nodewalk.size()) {
+
+      // move all edges with 'from' >= to one up
+      for (int k=e.to;k<nodewalk.size();k++) {
+          edgewalk[k+1] = edgewalk[k];
+      }
+
+      // insert the edge from-to
+      edgewalk[from].insert(make_pair(e.to,e));
+
+      // move all 'to'-node ids >= to one up
+      for (edgemap::iterator it_from = edgewalk.begin(); it_from != edgewalk.end(); it_from++) {
+          for(map<int, GSWEdge>::iterator it_to=((it_from->second).begin()); 
+              it_to!=((it_from->second).end()); 
+              it_to++) {
+            if (it_to->second.to >= e.to) it_to->second.to++;
+          }
+      }
+
+      // insert to into nodewalk
+      nodewalk.insert(nodewalk.begin() + e.to, n); 
+
   }
 
 }

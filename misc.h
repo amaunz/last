@@ -96,6 +96,8 @@ class Statistics {
 inline vector<string>& operator<<(vector<string>& res, string s) {
   if (s.size()) res.push_back(s);
   return res;
-} 
+};
+
+
 
 #endif

@@ -153,21 +153,15 @@ struct GSWEdge {
 class GSWalk {
   public:
       typedef vector<GSWNode> nodevector;      // position represents id, ids are always contiguous
-      typedef map<int, vector<GSWEdge> > edgemap; // key is id of from-node
+      typedef map<int, map<int, GSWEdge> > edgemap; // key is id of from-node (and to-node)
       nodevector nodewalk;
       edgemap edgewalk;
       nodevector temp_nodewalk;
       edgemap temp_edgewalk;
       int cd (vector<int> core_ids, GSWalk* s);
-      void print() {
-        each(nodewalk) {
-            cout << i << " " << nodewalk[i].labs[0] << endl;
-            each_it(edgewalk[i], vector<GSWEdge>::iterator) {
-                cout << i << " " << it->to << " " << it->labs[0] << endl;
-            }
-        }
-      }
-      void remove_singular_edge(int from, GSWEdge e);
+      friend ostream& operator<< (ostream &out, GSWalk* gsw);
+      void remove_singular_edge(int from, int to);
+      void add_edge(int from, GSWEdge e, GSWNode n);
 };
 
 #endif

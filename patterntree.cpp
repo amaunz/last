@@ -870,6 +870,13 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
 
        if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            fm::graphstate->print(gsw);      // print to graphstate walk
+           cout << gsw;
+           map<Tid, int> wma;
+           map<Tid, int> wmb;
+           GSWEdge e = { 7, vector<InputEdgeLabel> (1,2), wma, wmb } ;
+           GSWNode n = { vector<InputNodeLabel> (1,8), wma, wmb } ;
+           gsw->add_edge( 0, e, n );
+           cout << gsw;
            vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
            gsw->cd(core_ids, siblingwalk); // do conflict detection
            //      ^^^^^^^^  ^^^^^^^^^^^
@@ -989,3 +996,16 @@ void PatternTree::checkIfIndeedNormal () {
       cout << "NOT NORMAL: lower path than possible (2)" << endl;
   }
 }
+
+ostream& operator<< (ostream& os, GSWalk* gsw) {
+    each(gsw->nodewalk) {
+        os << i << " " << gsw->nodewalk[i].labs[0] << endl;
+    }
+    each(gsw->nodewalk) {
+        for(map<int,GSWEdge>::iterator it = gsw->edgewalk[i].begin(); it!=gsw->edgewalk[i].end(); it++)  {
+            os << i << " " << it->second.to << " " << it->second.labs[0] << endl;
+        }
+    }
+    return os;
+};
+
