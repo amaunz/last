@@ -162,6 +162,11 @@ class GSWalk {
       friend ostream& operator<< (ostream &out, GSWalk* gsw);
       void remove_singular_edge(int from, int to);
       void add_edge(int from, GSWEdge e, GSWNode n);
+      static bool lt_to_map (pair<int, GSWEdge> a, pair<int, GSWEdge> b) {
+        if (a.first < b.first) return 1;
+        return 0;
+      }
+
 };
 
 #endif

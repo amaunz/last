@@ -666,8 +666,22 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
           // immediate output
           if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
+           if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
+           else fm::graphstate->print(legs[i]->occurrences.frequency);
+
            if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
                fm::graphstate->print(gsw);       // print to graphstate walk
+
+               /*
+               cout << gsw;
+               map<Tid, int> wma;
+               map<Tid, int> wmb;
+               GSWEdge e = { 7, vector<InputEdgeLabel> (1,2), wma, wmb } ;
+               GSWNode n = { vector<InputNodeLabel> (1,8), wma, wmb } ;
+               gsw->add_edge( 0, e, n );
+               gsw->remove_singular_edge(0,7);
+               cout << gsw;
+               */
 
                vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
                gsw->cd(core_ids, siblingwalk); // do conflict detection
@@ -675,9 +689,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
                //      core      incremental
 
            }
-
-           if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
-           else fm::graphstate->print(legs[i]->occurrences.frequency);
 
           }
 

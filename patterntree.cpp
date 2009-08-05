@@ -868,24 +868,30 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
     // immediate output for all patterns
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
+       if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
+       else fm::graphstate->print(legs[i]->occurrences.frequency);
+ 
        if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            fm::graphstate->print(gsw);      // print to graphstate walk
+
+           /*
            cout << gsw;
            map<Tid, int> wma;
            map<Tid, int> wmb;
            GSWEdge e = { 7, vector<InputEdgeLabel> (1,2), wma, wmb } ;
            GSWNode n = { vector<InputNodeLabel> (1,8), wma, wmb } ;
            gsw->add_edge( 0, e, n );
+           gsw->remove_singular_edge(0,7);
            cout << gsw;
+           */
+
            vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
            gsw->cd(core_ids, siblingwalk); // do conflict detection
            //      ^^^^^^^^  ^^^^^^^^^^^
            //      core      incremental
        }
 
-       if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
-       else fm::graphstate->print(legs[i]->occurrences.frequency);
-    
+   
     }
 
     // RECURSE
@@ -998,14 +1004,17 @@ void PatternTree::checkIfIndeedNormal () {
 }
 
 ostream& operator<< (ostream& os, GSWalk* gsw) {
-    each(gsw->nodewalk) {
-        os << i << " " << gsw->nodewalk[i].labs[0] << endl;
+    for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
+        os << distance(gsw->nodewalk.begin(), it) << " " << it->labs[0] << endl;
     }
-    each(gsw->nodewalk) {
-        for(map<int,GSWEdge>::iterator it = gsw->edgewalk[i].begin(); it!=gsw->edgewalk[i].end(); it++)  {
-            os << i << " " << it->second.to << " " << it->second.labs[0] << endl;
+    for (map<int, map<int, GSWEdge> >::iterator it=gsw->edgewalk.begin(); it!=gsw->edgewalk.end(); it++) {
+        for(map<int,GSWEdge>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+            os << it->first << " ";
+            //os << it2->first << " " << it2->second.labs[0] << endl;
+            os << it2->first << " " << it2->second.labs[0] << endl;
         }
     }
     return os;
 };
+
 
