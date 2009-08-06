@@ -123,23 +123,25 @@ class GraphState {
 
 struct GSWNode {
     //      v    <labs>         <occurrences active>    <occurrences inactive>
-    // e.g. v    <6, 7>         {0->2, 1->3}            {2, 3}
+    // e.g. v    <6 7>          {0->2 1->3}             {2 3}
     // meaning                  T. 0 covered by 2 f.
     //                          on this node 
-    vector<InputNodeLabel> labs;
+    set<InputNodeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
+    int merge(GSWNode n);
 };
 
 struct GSWEdge {
     //      e    <to>    <labs>          <occurrences active>    <occurrences inactive>
-    // e.g. e    1       <2, 1>          {0->2, 1->3}            {2, 3}
+    // e.g. e    1       <2 1>           {0->2 1->3}             {2 3}
     // meaning                           T. 0 covered by 2 f.
-    //                                   on this edge 
+    //                                   on this edge
     int to;
-    vector<InputEdgeLabel> labs;
+    set<InputEdgeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
+    int merge(GSWEdge e);
     static bool lt_to (GSWEdge& e1, GSWEdge& e2){
         if (e1.to < e2.to) return 1;
         return 0;
@@ -158,14 +160,17 @@ class GSWalk {
       edgemap edgewalk;
       nodevector temp_nodewalk;
       edgemap temp_edgewalk;
+
       int cd (vector<int> core_ids, GSWalk* s);
-      friend ostream& operator<< (ostream &out, GSWalk* gsw);
+      int merge (GSWalk* single);
+
       void remove_singular_edge(int from, int to);
-      void add_edge(int from, GSWEdge e, GSWNode n);
+      void add_edge(int f, GSWEdge e, GSWNode n);
       static bool lt_to_map (pair<int, GSWEdge> a, pair<int, GSWEdge> b) {
         if (a.first < b.first) return 1;
         return 0;
       }
+      friend ostream& operator<< (ostream &out, GSWalk* gsw);
 
 };
 

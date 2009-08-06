@@ -1004,14 +1004,58 @@ void PatternTree::checkIfIndeedNormal () {
 }
 
 ostream& operator<< (ostream& os, GSWalk* gsw) {
+
     for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
-        os << distance(gsw->nodewalk.begin(), it) << " " << it->labs[0] << endl;
+        os << distance(gsw->nodewalk.begin(), it);
+        os << " < ";
+        for (set<InputNodeLabel>::iterator it2=it->labs.begin(); it2!=it->labs.end(); it2++) {
+            os << *it2 << " ";
+        }
+        os << ">";
+
+        /*
+        os << " { ";
+        for (map<Tid, int>::iterator it2=it->a.begin(); it2!=it->a.end(); it2++) {
+            os << it2->first << "->" << it2->second << " ";
+        }
+        os << "}";
+
+        os << " { ";
+        for (map<Tid, int>::iterator it2=it->i.begin(); it2!=it->i.end(); it2++) {
+            os << it2->first << "->" << it2->second << " ";
+        }
+        os << "}" ;
+        */
+        os << endl;
     }
+
     for (map<int, map<int, GSWEdge> >::iterator it=gsw->edgewalk.begin(); it!=gsw->edgewalk.end(); it++) {
         for(map<int,GSWEdge>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-            os << it->first << " ";
-            //os << it2->first << " " << it2->second.labs[0] << endl;
-            os << it2->first << " " << it2->second.labs[0] << endl;
+
+            // from and to
+            os << it->first << " " << it2->first; 
+
+            os << " < ";
+            for (set<InputEdgeLabel>::iterator it3=it2->second.labs.begin(); it3!=it2->second.labs.end(); it3++) {
+                os << *it3 << " ";
+            }
+            os << ">";
+
+            /*
+            os << " { ";
+            for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
+                os << it3->first << "->" << it3->second << " ";
+            }
+            os << "}";
+
+            os << " { ";
+            for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
+                os << it3->first << "->" << it3->second << " ";
+            }
+            os << "}";
+            */
+
+            os << endl;
         }
     }
     return os;
