@@ -1486,6 +1486,11 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
         s->merge(this);
 
         #ifdef DEBUG
+        cout << w1 << endl;
+        cout << w2 << endl;
+        #endif
+
+        #ifdef DEBUG
         cout << "-end-" << endl;
         #endif
         //exit(1);
@@ -1541,10 +1546,24 @@ int GSWalk::merge (GSWalk* single) {
 }
 
 int GSWNode::merge (GSWNode n) {
+    labs.insert(n.labs.begin(), n.labs.end());
+    for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
+        a[it->first] = a[it->first] + it->second;
+    }
+    for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
+        i[it->first] = i[it->first] + it->second;
+    }
     return 0;
 }
 
 int GSWEdge::merge (GSWEdge e) {
+    labs.insert(e.labs.begin(), e.labs.end());
+    for (map<Tid,int>::iterator it=e.a.begin(); it!=e.a.end(); it++) {
+        a[it->first] = a[it->first] + it->second;
+    }
+    for (map<Tid,int>::iterator it=e.i.begin(); it!=e.i.end(); it++) {
+        i[it->first] = i[it->first] + it->second;
+    }
     return 0;
 }
 
