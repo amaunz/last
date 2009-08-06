@@ -1013,7 +1013,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
         }
         os << ">";
 
-        /*
+        #ifdef DEBUG 
         os << " { ";
         for (map<Tid, int>::iterator it2=it->a.begin(); it2!=it->a.end(); it2++) {
             os << it2->first << "->" << it2->second << " ";
@@ -1025,11 +1025,13 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             os << it2->first << "->" << it2->second << " ";
         }
         os << "}" ;
-        */
+        #endif
         os << endl;
     }
 
     for (map<int, map<int, GSWEdge> >::iterator it=gsw->edgewalk.begin(); it!=gsw->edgewalk.end(); it++) {
+        if (!it->second.size()) os << it->first << endl;
+
         for(map<int,GSWEdge>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++) {
 
             // from and to
@@ -1041,7 +1043,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             }
             os << ">";
 
-            /*
+            #ifdef DEBUG 
             os << " { ";
             for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
                 os << it3->first << "->" << it3->second << " ";
@@ -1053,7 +1055,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
                 os << it3->first << "->" << it3->second << " ";
             }
             os << "}";
-            */
+            #endif
 
             os << endl;
         }

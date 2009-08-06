@@ -517,7 +517,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
         // TO BE REMOVED AGAIN
-        #define DEBUG
         #ifdef DEBUG
         fm::do_yaml=true;
         fm::gsp_out=false;

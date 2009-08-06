@@ -50,7 +50,7 @@ OBJ           = closeleg.o constraints.o database.o graphstate.o legoccurrence.o
 SWIG          = swig
 SWIGFLAGS     = -c++ -ruby
 ifeq ($(OS), Windows_NT) # assume MinGW/Windows
-CXXFLAGS      = -O3 -g $(INCLUDE)
+CXXFLAGS      = -O3 -g $(INCLUDE) -DDEBUG
 LIBS	      = -lm -llibopenbabel-3 -llibgsl -llibgslcblas
 LIB1          = lib$(NAME).dll
 .PHONY:
@@ -58,7 +58,7 @@ all: $(LIB1)
 $(LIB1): $(OBJ)
 	$(CC) $(LDFLAGS) $(LIBS) -shared -o $@ $^
 else                     # assume GNU/Linux
-CXXFLAGS      = -g $(INCLUDE) -fPIC
+CXXFLAGS      = -g $(INCLUDE) -fPIC -DDEBUG
 LIBS_LIB2     = -lopenbabel -lgsl
 LIBS          = $(LIBS_LIB2) -ldl -lm -lgslcblas
 LIB1          = lib$(NAME).so
