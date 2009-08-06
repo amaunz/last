@@ -1412,50 +1412,61 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
             int j = *index;
             
             // calculate edge difference
-            if (w1->edgewalk.find(j) != w1->edgewalk.end() && w2->edgewalk.find(j) != w2->edgewalk.end()) {
+            d1.clear();  
+            d2.clear();
 
-                map<int, GSWEdge>& w1j = w1->edgewalk.find(j)->second;
-                map<int, GSWEdge>& w2j = w2->edgewalk.find(j)->second;
-                cout << "j: " << j << ", W1: " << w1j.size() << ", W2: " << w2j.size() << endl;
+            edgemap::iterator e1 = w1->edgewalk.find(j);
+            edgemap::iterator e2 = w2->edgewalk.find(j);
 
-                d1.clear(); for (map<int, GSWEdge>::iterator it = w1j.begin(); it!=w1j.end(); it++) d1.insert(it->first);
-                d2.clear(); for (map<int, GSWEdge>::iterator it = w2j.begin(); it!=w2j.end(); it++) d2.insert(it->first); 
-                i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
-                d12.clear(); set_difference(d1.begin(), d1.end(), i12.begin(), i12.end(), std::inserter(d12, d12.end()));
-                d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
-
-                // push single edges to partner
-                each_it(d12, set<int>::iterator) {
-                    cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
-                    cout << " < ";
-                    set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
-                    for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                        cout << *it2 << " ";
-                    }
-                    cout << ">" << endl;
-                    w2->add_edge(j, w1j[*it], w1->nodewalk[*it]);
-                }
-
-                // insertions into w2 might have changed edges
-                if (d12.size()) {
-                    d2.clear(); 
-                    for (map<int, GSWEdge>::iterator it = w2j.begin(); it!=w2j.end(); it++) d2.insert(it->second.to); 
-                    i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
-                    d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
-                }
-
-                each_it(d21, set<int>::iterator) {
-                    cout << "D21: " << j << "->" << w2j.find(*it)->first;
-                    cout << " < "; 
-                    set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
-                    for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                        cout << *it2 << " ";
-                    }
-                    cout << ">" << endl;
-                    w1->add_edge(j, w2j[*it], w2->nodewalk[*it]);
-                }
-
+            if ( e1!=w1->edgewalk.end() ) {
+                for (map<int, GSWEdge>::iterator it = e1->second.begin(); it!=e1->second.end(); it++) d1.insert(it->first);
             }
+
+            if ( e2!=w2->edgewalk.end() ) {
+                for (map<int, GSWEdge>::iterator it = e2->second.begin(); it!=e2->second.end(); it++) d2.insert(it->first);
+            }
+
+            cout << "j: " << j << ", W1: " << e1->second.size() << ", W2: " << e2->second.size() << endl;
+
+            i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
+            d12.clear(); set_difference(d1.begin(), d1.end(), i12.begin(), i12.end(), std::inserter(d12, d12.end()));
+            d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
+
+            // push single edges to partner
+            each_it(d12, set<int>::iterator) {
+                map<int, GSWEdge>& w1j = e1->second;
+                cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
+                cout << " < ";
+                set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
+                for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                    cout << *it2 << " ";
+                }
+                cout << ">" << endl;
+                w2->add_edge(j, w1j[*it], w1->nodewalk[*it]);
+            }
+
+            // insertions into w2 might have changed edges
+            if (d12.size()) {
+                d2.clear(); 
+                e2 = w2->edgewalk.find(j);
+                map<int, GSWEdge>& w2j = e2->second;
+                for (map<int, GSWEdge>::iterator it = w2j.begin(); it!=w2j.end(); it++) d2.insert(it->second.to); 
+                i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
+                d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
+            }
+
+            each_it(d21, set<int>::iterator) {
+                map<int, GSWEdge>& w2j = e2->second;
+                cout << "D21: " << j << "->" << w2j.find(*it)->first;
+                cout << " < "; 
+                set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
+                for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                    cout << *it2 << " ";
+                }
+                cout << ">" << endl;
+                w1->add_edge(j, w2j[*it], w2->nodewalk[*it]);
+            }
+
 
         }
         cout << w1 << endl;
