@@ -498,13 +498,14 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
   }
 
   
-  
-  
   // Grow Path forw
   for (unsigned int j=0; j<forwpathlegs.size() ; j++ ) {
     unsigned int index = forwpathlegs[j];
 
     GSWalk* gsw = new GSWalk();
+    #ifdef DEBUG
+    int diehard = 0;
+    #endif
 
     // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[index]->occurrences.elements);
@@ -516,17 +517,15 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
     // immediate output
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
 
-        // TO BE REMOVED AGAIN
         #ifdef DEBUG
         fm::do_yaml=true;
         fm::gsp_out=false;
         string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
-        if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=true; }
+        if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
         //fm::do_yaml=false;
         //fm::gsp_out=true;
         #endif
-        // TO BE REMOVED AGAIN
-        
+       
         if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            fm::graphstate->print(gsw); // print to graphstate walk, checks needed
         }
@@ -570,6 +569,14 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
 
     delete gsw;
 
+    #ifdef DEBUG
+    if (diehard==1) { 
+       cerr << "DYING HARD!" << endl;
+       exit(0);
+    }
+    #endif
+
+
   }
 
   // Grow Path backw
@@ -586,6 +593,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
 
     // immediate output
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
+
 
         if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            fm::graphstate->print(gsw); // print to graphstate walk
@@ -712,11 +720,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
         }
       }
     }
-  }
-
-  if (fm::die) { 
-     cerr << "DYING HERE!" << endl;
-     exit(0);
   }
 
   // delete horizontal view

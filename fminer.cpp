@@ -139,7 +139,7 @@ void Fminer::Defaults() {
     fm::updated = true;
     fm::do_yaml=true;
     fm::gsp_out=true;
-    fm::die = false;
+    fm::die = 0;
 }
 
 

@@ -129,6 +129,7 @@ struct GSWNode {
     set<InputNodeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
+    int merge(GSWNode n);
 };
 
 struct GSWEdge {
@@ -140,6 +141,7 @@ struct GSWEdge {
     set<InputEdgeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
+    int merge(GSWEdge e);
     static bool lt_to (GSWEdge& e1, GSWEdge& e2){
         if (e1.to < e2.to) return 1;
         return 0;
@@ -160,6 +162,7 @@ class GSWalk {
       edgemap temp_edgewalk;
 
       int cd (vector<int> core_ids, GSWalk* s);
+      int merge (GSWalk* single);
 
       void add_edge(int f, GSWEdge e, GSWNode n);
       static bool lt_to_map (pair<int, GSWEdge> a, pair<int, GSWEdge> b) {

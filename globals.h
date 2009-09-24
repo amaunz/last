@@ -42,7 +42,7 @@ namespace fm {
     bool bbrc_sep;
     bool most_specific_trees_only;
     bool line_nrs;
-    bool die;
+    int die;
 
     Database* database=NULL;
     Statistics* statistics=NULL;

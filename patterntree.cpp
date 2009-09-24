@@ -33,6 +33,9 @@ namespace fm {
     extern bool do_output;
     extern bool bbrc_sep;
     extern bool most_specific_trees_only;
+    extern bool do_yaml;
+    extern bool gsp_out;
+    extern int die;
 
     extern Database* database;
     extern ChisqConstraint* chisq;
@@ -865,6 +868,8 @@ GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
     fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.label, legs[i]->occurrences.maxdegree );
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
+
+ 
        if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
        else fm::graphstate->print(legs[i]->occurrences.frequency);
  
@@ -916,6 +921,8 @@ GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
     fm::graphstate->deleteNode ();
 
     delete gsw;
+
+
 
   }
 
