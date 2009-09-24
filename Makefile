@@ -58,7 +58,7 @@ all: $(LIB1)
 $(LIB1): $(OBJ)
 	$(CC) $(LDFLAGS) $(LIBS) -shared -o $@ $^
 else                     # assume GNU/Linux
-CXXFLAGS      = -g $(INCLUDE) -fPIC -DDEBUG
+CXXFLAGS      = -g $(INCLUDE) -O3 -fPIC -DDEBUG
 LIBS_LIB2     = -lopenbabel -lgsl
 LIBS          = $(LIBS_LIB2) -ldl -lm -lgslcblas
 LIB1          = lib$(NAME).so

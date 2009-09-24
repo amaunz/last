@@ -826,7 +826,7 @@ PatternTree::PatternTree ( PatternTree &parenttree, unsigned int legindex ) {
   }
 }
 
-void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
+GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
 
   fm::statistics->patternsize++;
   if ( fm::statistics->patternsize > (int) fm::statistics->frequenttreenumbers.size () ) {
@@ -837,7 +837,7 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
   ++fm::statistics->frequenttreenumbers[fm::statistics->patternsize-1];
   if ( fm::statistics->patternsize == ((1<<(sizeof(NodeId)*8))-1) ) {
     fm::statistics->patternsize--;
-    return;
+    return NULL;
   }
     
   if (fm::do_backbone && (legs.size()==0)) {
@@ -853,50 +853,31 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
         fm::updated = false;
   }
 
+  // new siblingwalk
   GSWalk* siblingwalk = new GSWalk();
 
   for ( int i = legs.size () - 1; i >= 0; i-- ) {
 
+    // new current pattern
     GSWalk* gsw = new GSWalk();
+    GSWalk* topdown = NULL;
 
-    // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
-
-    // GRAPHSTATE
     fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.label, legs[i]->occurrences.maxdegree );
-
-    // immediate output for all patterns
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
-
        if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
        else fm::graphstate->print(legs[i]->occurrences.frequency);
  
        if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-           fm::graphstate->print(gsw);      // print to graphstate walk
-
-           /*
-           cout << gsw;
-           map<Tid, int> wma;
-           map<Tid, int> wmb;
-           GSWEdge e = { 7, vector<InputEdgeLabel> (1,2), wma, wmb } ;
-           GSWNode n = { vector<InputNodeLabel> (1,8), wma, wmb } ;
-           gsw->add_edge( 0, e, n );
-           gsw->remove_singular_edge(0,7);
-           cout << gsw;
-           */
-
+           fm::graphstate->print(gsw);      // print to graphstate walk, checks are needed
            vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
-           gsw->cd(core_ids, siblingwalk); // do conflict detection
-           //      ^^^^^^^^  ^^^^^^^^^^^
-           //      core      incremental
+           gsw->cd(core_ids, siblingwalk); // merge to siblingwalk
        }
-
    
     }
 
     // RECURSE
     float cmax = maxi ( maxi ( fm::chisq->sig, max.first ), fm::chisq->p );
-
     if ( ( !fm::do_pruning || 
                (
                  (  !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) || 
@@ -908,17 +889,15 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
          )
     
     ) {   // UB-PRUNING
-
         PatternTree p ( *this, i );
-
-        // output most specialized pattern
         if (fm::most_specific_trees_only && fm::do_output && !fm::do_backbone && p.legs.size() == 0) {
             if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
             else fm::graphstate->print(legs[i]->occurrences.frequency);
         }
-
-        if (fm::chisq->p > max.first) { fm::updated = true; p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
-        else p.expand (max, gsw);
+        if (fm::chisq->p > max.first) { fm::updated = true; topdown = p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
+        else topdown = p.expand (max, gsw);
+        // TODO: MERGE TOPDOWN!!
+        delete topdown;
     }
     else {
         if (fm::do_backbone && fm::updated) {
@@ -946,7 +925,8 @@ void PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
       }
   }
 
-  delete siblingwalk;
+  
+  return siblingwalk;
 
   fm::statistics->patternsize--;
 

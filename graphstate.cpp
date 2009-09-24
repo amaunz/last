@@ -35,6 +35,7 @@ namespace fm {
     extern bool do_yaml;
     extern Database* database;
     extern GraphState* graphstate;
+    extern bool die;
 }
 
 GraphState::GraphState () {
@@ -1366,214 +1367,127 @@ void GraphState::puti ( FILE *f, int i ) {
   } while ( k ); 
 }
 
-// Aligns and merges two features
-//
+//! s-sided align and merge of two features by walking core ids
+// NOTE: s is intended to 'carry' the growing meta pattern
 int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
-
+    cerr << "cd--";
+    // sanity check: core
     if (core_ids.size()>0) {
-
-        GSWalk* w1 = this;
-        GSWalk* w2 = s;
-
-        if (core_ids.size() < 1) return 1; // parent was empty
-        if (w1->nodewalk.size() < core_ids.size()) return 1; // w1 too small
-
-        // copy core from w1 to w2, if w2 empty
+        set<int> u12;
         sort(core_ids.begin(), core_ids.end()); 
+        if (nodewalk.size() < core_ids.size()) return 1;
         int border=core_ids.back();
-
-        if (w2->nodewalk.size() == 0) {
-            w2->nodewalk.insert(w2->nodewalk.begin(), w1->nodewalk.begin(), w1->nodewalk.begin()+core_ids.size());
+        // prepare basic structure: copy core nodes and connecting edges from this to s, if s is empty
+        if (s->nodewalk.size() == 0) {
+            s->nodewalk.insert(s->nodewalk.begin(), nodewalk.begin(), nodewalk.begin()+core_ids.size());
             for (vector<int>::iterator index = core_ids.begin(); index!=core_ids.end(); index++) {
-                edgemap::iterator from = w1->edgewalk.find(*index);
-                if (from!=w1->edgewalk.end()) {
+                edgemap::iterator from = edgewalk.find(*index);
+                if (from!=edgewalk.end()) {
                     for (map<int, GSWEdge>::iterator to=from->second.begin(); to!=from->second.end(); to++) {
                         if (to->first <= border) {
-                            w2->edgewalk[from->first].insert(*to);
+                            s->edgewalk[from->first].insert(*to);
                         }
                     }
                 }
             }
         } 
-
-
         #ifdef DEBUG
-        cout << "-begin-" << endl;
-        cout << w1 << endl;
-        cout << w2 << endl;
+        if (fm::die) {
+            cout << "-begin-" << endl;
+            cout << this << endl;
+            cout << s << endl;
+        }
         #endif
-        
         // get refined edges from this
         set<int> d1; 
         set<int> d2;
         set<int> i12;
         set<int> d12; 
         set<int> d21;
-
         for (vector<int>::iterator index = core_ids.begin(); index!=core_ids.end(); index++) {
             int j = *index;
-            
-            // calculate edge difference
             d1.clear();  
             d2.clear();
-
-            edgemap::iterator e1 = w1->edgewalk.find(j);
-            edgemap::iterator e2 = w2->edgewalk.find(j);
-
-            if ( e1!=w1->edgewalk.end() ) {
+            edgemap::iterator e1 = edgewalk.find(j);
+            edgemap::iterator e2 = s->edgewalk.find(j);
+            if ( e1!=edgewalk.end() ) {
+                // remember tos of this->j
                 for (map<int, GSWEdge>::iterator it = e1->second.begin(); it!=e1->second.end(); it++) d1.insert(it->first);
             }
-
-            if ( e2!=w2->edgewalk.end() ) {
+            if ( e2!=s->edgewalk.end() ) {
+                // remember tos of s->j
                 for (map<int, GSWEdge>::iterator it = e2->second.begin(); it!=e2->second.end(); it++) d2.insert(it->first);
             }
-
-        #ifdef DEBUG
-            cout << "j: " << j << ", W1: " << e1->second.size() << ", W2: " << e2->second.size() << endl;
-        #endif
-
+            #ifdef DEBUG
+            if (fm::die) {
+                cout << "j: " << j << ", W1: " << e1->second.size() << ", W2: " << e2->second.size() << endl;
+            }
+            #endif
+            // calculate intersection and diff sets of tos
             i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
             d12.clear(); set_difference(d1.begin(), d1.end(), i12.begin(), i12.end(), std::inserter(d12, d12.end()));
             d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
-
-            // push single edges to partner
+            // push single edges to s
             each_it(d12, set<int>::iterator) {
                 map<int, GSWEdge>& w1j = e1->second;
-        #ifdef DEBUG
-                cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
-                cout << " < ";
-                set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
-                for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                    cout << *it2 << " ";
+                #ifdef DEBUG
+                if (fm::die) {
+                        cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
+                        cout << " < ";
+                        set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
+                        for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                            cout << *it2 << " ";
+                        }
+                        cout << ">" << endl;
                 }
-                cout << ">" << endl;
-        #endif
-                w2->add_edge(j, w1j[*it], w1->nodewalk[*it]);
+                #endif
+                s->add_edge(j, w1j[*it], nodewalk[*it]);
             }
-
-            // insertions into w2 might have changed edges
+            // if edges have been added to w2 due to d12, recalculate d21
             if (d12.size()) {
-                d2.clear(); 
-                e2 = w2->edgewalk.find(j);
-                map<int, GSWEdge>& w2j = e2->second;
-                for (map<int, GSWEdge>::iterator it = w2j.begin(); it!=w2j.end(); it++) d2.insert(it->second.to); 
-                i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
-                d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
+                set<int> d2_old = d2;
+                d2.clear(); e2 = s->edgewalk.find(j); map<int, GSWEdge>& w2j = e2->second; for (map<int, GSWEdge>::iterator it = w2j.begin(); it!=w2j.end(); it++) d2.insert(it->second.to); 
+                if (d2.size() > d2_old.size()) {
+                    i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
+                    d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
+                }
             }
-
+            // push single edges to this
             each_it(d21, set<int>::iterator) {
                 map<int, GSWEdge>& w2j = e2->second;
-        #ifdef DEBUG
-                cout << "D21: " << j << "->" << w2j.find(*it)->first;
-                cout << " < "; 
-                set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
-                for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                    cout << *it2 << " ";
+                #ifdef DEBUG
+                if (fm::die) {
+                    cout << "D21: " << j << "->" << w2j.find(*it)->first;
+                    cout << " < "; 
+                    set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
+                    for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                        cout << *it2 << " ";
+                    }
+                    cout << ">" << endl;
                 }
-                cout << ">" << endl;
-        #endif
-                w1->add_edge(j, w2j[*it], w2->nodewalk[*it]);
+                #endif
+                add_edge(j, w2j[*it], s->nodewalk[*it]);
             }
-
-
         }
         #ifdef DEBUG
-        cout << w1 << endl;
-        cout << w2 << endl;
-        #endif
-
-        // merge to s
-        s->merge(this);
-
-        #ifdef DEBUG
-        cout << w1 << endl;
-        cout << w2 << endl;
-        #endif
-
-        #ifdef DEBUG
-        cout << "-end-" << endl;
-        #endif
-        //exit(1);
-
-    }
-
-    return 0;
-
-}
-
-//! Merges two aligned features
-//
-int GSWalk::merge (GSWalk* single) {
-
-    if ( nodewalk.size() != single->nodewalk.size() ) {
-        cerr << "Error! Can not merge nodewalks of different size." << endl; 
-        exit(1);
-    }
-
-    if ( edgewalk.size() != single->edgewalk.size() ) {
-        cerr << "Error! Can not merge edgewalks of different size." << endl; 
-        cerr << "size: " << edgewalk.size() << ", s size: " << single->edgewalk.size() << endl;
-        exit(1);
-    }
-
-    for ( int i=0; i<nodewalk.size(); i++ ) {
-        nodewalk[i].merge(single->nodewalk[i]);
-    }
-
-    each_it(edgewalk, edgemap::iterator) {
-        edgemap::iterator& from = it;
-        edgemap::iterator single_from=single->edgewalk.find(from->first);
-
-        if (single_from == single->edgewalk.end()) {
-            cerr << "Error! Can not merge edgewalks with different 'from'-components." << endl; 
-            exit(1);
+        if (fm::die) {
+            cout << this << endl;
+            cout << s << endl;
         }
-
-        map<int, GSWEdge>& e = from->second;
-        map<int, GSWEdge>& se = single_from->second;
-
-        for (map<int, GSWEdge>::iterator to=e.begin(); to!=e.end(); to++) {
-            map<int, GSWEdge>::iterator single_to=se.find(to->first);
-
-            if (single_to == se.end()) {
-                cerr << "Error! Can not merge edgewalks with different 'to'-components." << endl; 
-                exit(1);
-            }
-            
-            to->second.merge(single_to->second);
-        }
+        #endif
+        // calculate one step core ids 
+        u12.clear(); set_union(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(u12, u12.end()));
+        if (u12.size()) cd(vector<int> (u12.begin(),u12.end()), s);
+        return 0;
     }
-}
-
-int GSWNode::merge (GSWNode n) {
-    labs.insert(n.labs.begin(), n.labs.end());
-    for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
-        a[it->first] = a[it->first] + it->second;
-    }
-    for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
-        i[it->first] = i[it->first] + it->second;
-    }
-    return 0;
-}
-
-int GSWEdge::merge (GSWEdge e) {
-    labs.insert(e.labs.begin(), e.labs.end());
-    for (map<Tid,int>::iterator it=e.a.begin(); it!=e.a.end(); it++) {
-        a[it->first] = a[it->first] + it->second;
-    }
-    for (map<Tid,int>::iterator it=e.i.begin(); it!=e.i.end(); it++) {
-        i[it->first] = i[it->first] + it->second;
-    }
-    return 0;
+    return 1;
 }
 
 
 //! Adds a node refinement for edge e and node n. id of n is nodewalk size.
-//
 void GSWalk::add_edge (int f, GSWEdge e, GSWNode n) {
     
   if (e.to <= nodewalk.size()) {
-
 
       // move all 'to'-node ids >= to one up
       for (edgemap::iterator from = edgewalk.begin(); from != edgewalk.end(); from++) {
@@ -1588,18 +1502,17 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n) {
           }
       }
 
-      // insert the edge from-to
+      // insert the edge from-to into edgewalk
       pair<map<int, GSWEdge>::iterator, bool> from = edgewalk[f].insert(make_pair(e.to,e));
       if (!from.second) { cerr << "Error! Key exists while adding an edge. " << endl; exit(1); }
-      from.first->second.a.clear();
-      from.first->second.i.clear();
+      //from.first->second.a.clear();
+      //from.first->second.i.clear();
 
       // insert to into nodewalk
       nodevector::iterator it = nodewalk.insert(nodewalk.begin() + e.to, n); 
-      it->a.clear();
-      it->i.clear();
+      //it->a.clear();
+      //it->i.clear();
 
   }
-
 
 }
