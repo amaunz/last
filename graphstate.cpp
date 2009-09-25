@@ -1460,7 +1460,7 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
                 }
             }
             u12.insert(d21.begin(), d21.end());
-            // paste single edges to this: necessary for unique indices in next iteration
+            // paste single edges into this: necessary for unique indices in next iteration
             each_it(d21, set<int>::iterator) {
                 map<int, GSWEdge>& w2j = e2->second;
                 #ifdef DEBUG
