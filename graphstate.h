@@ -162,7 +162,7 @@ class GSWalk {
       edgemap temp_edgewalk;
 
       int cd (vector<int> core_ids, GSWalk* s);
-      int merge (GSWalk* single);
+      int merge (GSWalk* single, vector<int> core_ids);
 
       void add_edge(int f, GSWEdge e, GSWNode n);
       static bool lt_to_map (pair<int, GSWEdge> a, pair<int, GSWEdge> b) {

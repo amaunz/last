@@ -522,6 +522,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
         fm::gsp_out=false;
         string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
         if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
+        fm::die=1;
         //fm::do_yaml=false;
         //fm::gsp_out=true;
         #endif
@@ -693,16 +694,39 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
                 fm::refine_singles || (legs[i]->occurrences.frequency>1)
              )
           ){
-               PatternTree tree ( *this, i );
-               if (fm::most_specific_trees_only && fm::do_output && !fm::do_backbone && tree.legs.size() == 0) {
+              PatternTree tree ( *this, i );
+              if (fm::most_specific_trees_only && fm::do_output && !fm::do_backbone && tree.legs.size() == 0) {
                    if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
                    else fm::graphstate->print(legs[i]->occurrences.frequency);
-               }
-               // expand using individual pattern as parent
-               if (max.first<fm::chisq->p) { fm::updated = true; topdown = tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
-               else topdown = tree.expand (max, gsw);
-               // TODO: MERGE TOPDOWN!!
-               delete topdown;
+              }
+              // expand using individual pattern as parent
+              if (max.first<fm::chisq->p) { fm::updated = true; topdown = tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
+              else topdown = tree.expand (max, gsw);
+              // merge to siblingwalk
+              if (topdown != NULL) {
+                   if (topdown->edgewalk.size()) {
+                        // get core ids
+                        vector<int> core_ids; for (int i=0; i<topdown->nodewalk.size(); i++) core_ids.push_back(i);
+                        #ifdef DEBUG
+                        if (fm::die) {
+                            cout << "TOPDOWN" << endl;
+                            cout << topdown << endl;
+                            cout << "--result--" << endl;
+                            cout << siblingwalk << endl;
+                        }
+                        #endif
+                        topdown->cd(core_ids, siblingwalk); 
+                        #ifdef DEBUG
+                        if (fm::die) {
+                            cout << "TOPDOWN" << endl;
+                            cout << topdown << endl;
+                            cout << "--result--" << endl;
+                            cout << siblingwalk << endl;
+                        }
+                        #endif
+                   }
+              }
+              delete topdown;
           }
           else {
               if (fm::do_backbone && fm::updated) { 

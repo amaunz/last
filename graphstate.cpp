@@ -1371,9 +1371,9 @@ void GraphState::puti ( FILE *f, int i ) {
 // NOTE: s is intended to 'carry' the growing meta pattern
 int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
     #ifdef DEBUG
-    cerr << "core: '";
-    each(core_ids) cerr << core_ids[i] << " ";
-    cerr << "'" << endl;
+    cout << "core: '";
+    each(core_ids) cout << core_ids[i] << " ";
+    cout << "'" << endl;
     #endif
     // sanity check: core
     if (core_ids.size()>0) {
@@ -1486,7 +1486,7 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
 
         // merge labels and activities to s
         cout << "-merge-" << endl;
-        s->merge(this);
+        s->merge(this, core_ids);
 
         #ifdef DEBUG
         if (fm::die) {
@@ -1503,50 +1503,43 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
     return 1;
 }
 
-//! Merges two aligned features
+
+
+//! Merges two aligned features symmetrically on selected ids
 //
-int GSWalk::merge (GSWalk* single) {
-
-    if ( nodewalk.size() != single->nodewalk.size() ) {
-        cerr << "Error! Can not merge nodewalks of different size." << endl; 
+int GSWalk::merge (GSWalk* single, vector<int> core_ids) {
+    // sanity check: core ids present in nodewalks
+    vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
+    if (!(includes(test_ids.begin(),test_ids.end(),core_ids.begin(),core_ids.end()))) {
+        cerr << "Error! More core ids than nodes." << endl; 
         exit(1);
     }
-
-    if ( edgewalk.size() != single->edgewalk.size() ) {
-        cerr << "Error! Can not merge edgewalks of different size." << endl; 
-        cerr << "size: " << edgewalk.size() << ", s size: " << single->edgewalk.size() << endl;
-        exit(1);
+    // nodes clean: do the actual node merging
+    each_it(core_ids, vector<int>::iterator) {
+        nodewalk[*it].merge(single->nodewalk[*it]);
     }
-
-    for ( int i=0; i<nodewalk.size(); i++ ) {
-        nodewalk[i].merge(single->nodewalk[i]);
-    }
-
-    each_it(edgewalk, edgemap::iterator) {
-        edgemap::iterator& from = it;
-        edgemap::iterator single_from=single->edgewalk.find(from->first);
-
-        if (single_from == single->edgewalk.end()) {
-            cerr << "Error! Can not merge edgewalks with different 'from'-components." << endl; 
-            exit(1);
-        }
-
-        map<int, GSWEdge>& e = from->second;
-        map<int, GSWEdge>& se = single_from->second;
-
-        for (map<int, GSWEdge>::iterator to=e.begin(); to!=e.end(); to++) {
-            map<int, GSWEdge>::iterator single_to=se.find(to->first);
-
-            if (single_to == se.end()) {
-                cerr << "Error! Can not merge edgewalks with different 'to'-components." << endl; 
+    // edge merging
+    each_it(core_ids, vector<int>::iterator) {
+        edgemap::iterator from = edgewalk.find(*it);
+        if (from!=edgewalk.end())   {
+            edgemap::iterator single_from=single->edgewalk.find(from->first);
+            if (single_from == single->edgewalk.end()) {
+                cerr << "Error! Can not merge edgewalks with different 'from'-components." << endl; 
                 exit(1);
             }
-            
-            to->second.merge(single_to->second);
+            map<int, GSWEdge>& e = from->second;
+            map<int, GSWEdge>& se = single_from->second;
+            for (map<int, GSWEdge>::iterator to=e.begin(); to!=e.end(); to++) {
+                map<int, GSWEdge>::iterator single_to=se.find(to->first);
+                if (single_to == se.end()) {
+                    cerr << "Error! Can not merge edgewalks with different 'to'-components." << endl; 
+                    exit(1);
+                }
+                to->second.merge(single_to->second);
+            }
         }
     }
 }
-
 int GSWNode::merge (GSWNode n) {
     labs.insert(n.labs.begin(), n.labs.end());
     for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
@@ -1557,7 +1550,6 @@ int GSWNode::merge (GSWNode n) {
     }
     return 0;
 }
-
 int GSWEdge::merge (GSWEdge e) {
     labs.insert(e.labs.begin(), e.labs.end());
     for (map<Tid,int>::iterator it=e.a.begin(); it!=e.a.end(); it++) {
@@ -1571,31 +1563,29 @@ int GSWEdge::merge (GSWEdge e) {
 
 
 
+
 //! Adds a node refinement for edge e and node n. id of n is nodewalk size.
+//
 void GSWalk::add_edge (int f, GSWEdge e, GSWNode n) {
-  if (e.to <= nodewalk.size()) {
-      // move all 'to'-node ids >= to one up
-      for (edgemap::iterator from = edgewalk.begin(); from != edgewalk.end(); from++) {
-          map<int, GSWEdge>& to_map = from->second;
-          for (map<int, GSWEdge>::iterator to=to_map.begin(); to != to_map.end(); to++ ) {
-              if (to->first >= e.to) {
-                  GSWEdge val = to->second; val.to++;
-                  map<int, GSWEdge>::iterator tmp = to;
-                  to = (to_map.insert( make_pair ( val.to , val ) )).first;
-                  to_map.erase(tmp);
-              }
-          }
-      }
-      // insert the edge from-to into edgewalk
-      pair<map<int, GSWEdge>::iterator, bool> from = edgewalk[f].insert(make_pair(e.to,e));
-      if (!from.second) { cerr << "Error! Key exists while adding an edge. " << endl; exit(1); }
-      from.first->second.a.clear();
-      from.first->second.i.clear();
-
-      // insert to into nodewalk
-      nodevector::iterator it = nodewalk.insert(nodewalk.begin() + e.to, n); 
-      it->a.clear();
-      it->i.clear();
-
-  }
+    // move all 'to'-node ids >= to one up
+    for (edgemap::iterator from = edgewalk.begin(); from != edgewalk.end(); from++) {
+        map<int, GSWEdge>& to_map = from->second;
+        for (map<int, GSWEdge>::iterator to=to_map.begin(); to != to_map.end(); to++ ) {
+            if (to->first >= e.to) {
+                GSWEdge val = to->second; val.to++;
+                map<int, GSWEdge>::iterator tmp = to;
+                to = (to_map.insert( make_pair ( val.to , val ) )).first;
+                to_map.erase(tmp);
+            }
+        }
+    }
+    // insert the edge from-to into edgewalk
+    pair<map<int, GSWEdge>::iterator, bool> from = edgewalk[f].insert(make_pair(e.to,e));
+    if (!from.second) { cerr << "Error! Key exists while adding an edge. " << endl; exit(1); }
+    from.first->second.a.clear();
+    from.first->second.i.clear();
+    // insert to into nodewalk
+    nodevector::iterator it = nodewalk.insert(nodewalk.begin() + e.to, n); 
+    it->a.clear();
+    it->i.clear();
 }

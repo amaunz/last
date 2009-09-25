@@ -902,6 +902,16 @@ GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
         if (fm::chisq->p > max.first) { fm::updated = true; topdown = p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
         else topdown = p.expand (max, gsw);
         // TODO: MERGE TOPDOWN!!
+        #ifdef DEBUG
+        if (fm::die) {
+            if (topdown != NULL) {
+                if (topdown->edgewalk.size()) {
+                    cout << "TOPDOWN2" << endl;
+                    cout << topdown << endl;
+                }
+            }
+        }
+        #endif
         delete topdown;
     }
     else {
