@@ -702,11 +702,10 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
               if (max.first<fm::chisq->p) { fm::updated = true; topdown = tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
               else topdown = tree.expand (max, gsw);
               // merge to siblingwalk
-              /*
-              if (topdown != NULL) {
+              if ((topdown != NULL) && fm::die) {
                    if (topdown->edgewalk.size()) {
                         // get core ids
-                        vector<int> core_ids; for (int i=0; i<topdown->nodewalk.size(); i++) core_ids.push_back(i);
+                        vector<int> core_ids; for (int i=0; i<siblingwalk->nodewalk.size(); i++) core_ids.push_back(i);
                         #ifdef DEBUG
                         if (fm::die) {
                             cout << "TOPDOWN" << endl;
@@ -726,7 +725,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
                         #endif
                    }
               }
-              */
               delete topdown;
           }
           else {

@@ -1379,7 +1379,6 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
     if (core_ids.size()>0) {
         sort(core_ids.begin(), core_ids.end()); 
         // reserve space for next step
-        set<int> u12;
         if (nodewalk.size() < core_ids.size()) return 1;
         int border=core_ids.back();
         // prepare basic structure: copy core nodes and connecting edges from this to s, if s is empty
@@ -1404,11 +1403,13 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
         }
         #endif
         // get refined edges from this
-        set<int> d1; 
-        set<int> d2;
-        set<int> i12;
-        set<int> d12; 
-        set<int> d21;
+        set<int> d1;  // the set of edges going out of j in this
+        set<int> d2;  // the set of edges going out of j in s
+        set<int> i12; // the common edges for j (core and node conflict edges)
+        set<int> c12; // the common edges for j without the core (exactly the node conflict edges)
+        set<int> d12; // the mutex edges for j (neither core nor node conflict edges)
+        set<int> d21; // 
+        set<int> u12; // the incremental union set over both d12 and d21 and j (includes mutex and node conflict edges)
         for (vector<int>::iterator index = core_ids.begin(); index!=core_ids.end(); index++) {
             int j = *index;
             d1.clear();  
@@ -1429,9 +1430,10 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
             }
             #endif
             // calculate intersection and diff sets of tos
-            i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
-            d12.clear(); set_difference(d1.begin(), d1.end(), i12.begin(), i12.end(), std::inserter(d12, d12.end()));
-            u12.insert(d12.begin(), d12.end());
+            i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));             // intersection (symmetric)
+            c12.clear(); set_difference(i12.begin(), i12.end(), core_ids.begin(), core_ids.end(), std::inserter(c12, c12.end())); // intersection \ core_ids (symmetric)
+            d12.clear(); set_difference(d1.begin(), d1.end(), i12.begin(), i12.end(), std::inserter(d12, d12.end()));             // mutex set
+            u12.insert(d12.begin(), d12.end());                                                                                   // insert mutex
             d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
 
             // paste single edges into s
@@ -1450,16 +1452,18 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
                 #endif
                 s->add_edge(j, w1j[*it], nodewalk[*it]);
             }
-            // if edges have been added to w2 due to d12, recalculate d21
+            // if edges have been added to s[j] due to d12, recalculate d21
             if (d12.size()) {
                 set<int> d2_old = d2;
                 d2.clear(); e2 = s->edgewalk.find(j); map<int, GSWEdge>& w2j = e2->second; for (map<int, GSWEdge>::iterator it = w2j.begin(); it!=w2j.end(); it++) d2.insert(it->second.to); 
                 if (d2.size() > d2_old.size()) {
                     i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));
+                    c12.clear(); set_difference(i12.begin(), i12.end(), core_ids.begin(), core_ids.end(), std::inserter(c12, c12.end()));
                     d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
                 }
             }
             u12.insert(d21.begin(), d21.end());
+            u12.insert(c12.begin(), c12.end());                                                                                   // insert the final common edges for j \ core
             // paste single edges into this: necessary for unique indices in next iteration
             each_it(d21, set<int>::iterator) {
                 map<int, GSWEdge>& w2j = e2->second;
@@ -1487,6 +1491,7 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
         // merge labels and activities to s
         cout << "-merge-" << endl;
         s->merge(this, core_ids);
+        s->merge(this, vector<int>(c12.begin(), c12.end()));
 
         #ifdef DEBUG
         if (fm::die) {
