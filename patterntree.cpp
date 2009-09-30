@@ -901,17 +901,30 @@ GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
         }
         if (fm::chisq->p > max.first) { fm::updated = true; topdown = p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
         else topdown = p.expand (max, gsw);
-        // TODO: MERGE TOPDOWN!!
-        #ifdef DEBUG
-        if (fm::die) {
-            if (topdown != NULL) {
-                if (topdown->edgewalk.size()) {
-                    cout << "TOPDOWN2" << endl;
+        // merge to siblingwalk
+        if ((topdown != NULL) && fm::die) {
+           if (topdown->edgewalk.size()) {
+                // get core ids
+                vector<int> core_ids; for (int i=0; i<siblingwalk->nodewalk.size(); i++) core_ids.push_back(i);
+                #ifdef DEBUG
+                if (fm::die) {
+                    cout << "TOPDOWN2 BEGIN " << core_ids.size() << endl;
                     cout << topdown << endl;
+                    cout << "--result--" << endl;
+                    cout << siblingwalk << endl;
                 }
-            }
+                #endif
+                topdown->cd(core_ids, siblingwalk); 
+                #ifdef DEBUG
+                if (fm::die) {
+                    cout << "TOPDOWN2 END " << core_ids.size() << endl;
+                    cout << topdown << endl;
+                    cout << "--result--" << endl;
+                    cout << siblingwalk << endl;
+                }
+                #endif
+           }
         }
-        #endif
         delete topdown;
     }
     else {
@@ -1060,4 +1073,41 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
     return os;
 };
 
+ostream& operator<< (ostream& os, GSWEdge* gswe) {
+    typedef map<Tid,int> mmap;
+    os << "To: " << gswe->to;
+    os << " Labs: <";
+    each_it(gswe->labs, set<InputEdgeLabel>::iterator) {
+        os << *it << " ";
+    }
+    os << "> ";
+    os << "<";
+    each_it(gswe->a, mmap::iterator) {
+        os << it->first << "->" << it->second << " ";
+    }
+    os << "> ";
+    os << "<";
+    each_it(gswe->i, mmap::iterator) {
+        os << it->first << "->" << it->second << " ";
+    }
+    os << "> ";
+}
 
+ostream& operator<< (ostream& os, GSWNode* gswn) {
+    typedef map<Tid,int> mmap;
+    os << " Labs: <";
+    each_it(gswn->labs, set<InputEdgeLabel>::iterator) {
+        os << *it << " ";
+    }
+    os << "> ";
+    os << "<";
+    each_it(gswn->a, mmap::iterator) {
+        os << it->first << "->" << it->second << " ";
+    }
+    os << "> ";
+    os << "<";
+    each_it(gswn->i, mmap::iterator) {
+        os << it->first << "->" << it->second << " ";
+    }
+    os << "> ";
+}

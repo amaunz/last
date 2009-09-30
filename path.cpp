@@ -522,6 +522,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
         fm::gsp_out=false;
         string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
         if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
+        fm::die=1;
         //fm::do_yaml=false;
         //fm::gsp_out=true;
         #endif
@@ -708,7 +709,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
                         vector<int> core_ids; for (int i=0; i<siblingwalk->nodewalk.size(); i++) core_ids.push_back(i);
                         #ifdef DEBUG
                         if (fm::die) {
-                            cout << "TOPDOWN" << endl;
+                            cout << "TOPDOWN BEGIN " << core_ids.size() << endl;
                             cout << topdown << endl;
                             cout << "--result--" << endl;
                             cout << siblingwalk << endl;
@@ -717,7 +718,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
                         topdown->cd(core_ids, siblingwalk); 
                         #ifdef DEBUG
                         if (fm::die) {
-                            cout << "TOPDOWN" << endl;
+                            cout << "TOPDOWN END " << core_ids.size() << endl;
                             cout << topdown << endl;
                             cout << "--result--" << endl;
                             cout << siblingwalk << endl;

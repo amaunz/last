@@ -130,6 +130,7 @@ struct GSWNode {
     map<Tid, int> a;
     map<Tid, int> i;
     int merge(GSWNode n);
+    friend ostream& operator<< (ostream &out, GSWNode* n);
 };
 
 struct GSWEdge {
@@ -150,6 +151,7 @@ struct GSWEdge {
         if ((e1->to == e2->to) && std::equal(e1->labs.begin(), e1->labs.end(), e2->labs.begin())) return 1;
         return 0;
     }
+    friend ostream& operator<< (ostream &out, GSWEdge* e);
 };
 
 class GSWalk {
@@ -164,7 +166,7 @@ class GSWalk {
       int cd (vector<int> core_ids, GSWalk* s);
       int merge (GSWalk* single, vector<int> core_ids);
 
-      void add_edge(int f, GSWEdge e, GSWNode n);
+      void add_edge(int f, GSWEdge e, GSWNode n, bool reorder);
       static bool lt_to_map (pair<int, GSWEdge> a, pair<int, GSWEdge> b) {
         if (a.first < b.first) return 1;
         return 0;
