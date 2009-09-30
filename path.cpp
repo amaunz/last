@@ -522,7 +522,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
         fm::gsp_out=false;
         string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
         if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
-        fm::die=1;
         //fm::do_yaml=false;
         //fm::gsp_out=true;
         #endif
