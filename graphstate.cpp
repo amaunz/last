@@ -1516,10 +1516,13 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
             cout << this << endl;
             cout << s << endl;
         }
+        cout << "-merge-" << endl;
         #endif
 
         // merge labels and activities to s
-        cout << "-merge-" << endl;
+        // all core id nodes
+        // all edges leaving core id nodes
+        // this includes edges inside the core, as well as edges leaving the core
         s->merge(this, core_ids);
 
         #ifdef DEBUG
@@ -1539,9 +1542,12 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
 
 
 
-//! Merges two aligned features symmetrically on selected ids
+//! Merges w to this on selected ids
+// all core id nodes
+// all edges leaving core id nodes
+// this includes edges inside the core, as well as edges leaving the core
 //
-int GSWalk::merge (GSWalk* single, vector<int> core_ids) {
+int GSWalk::merge (GSWalk* w, vector<int> core_ids) {
     // sanity check: core ids present in nodewalks
     vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
     if (!(includes(test_ids.begin(),test_ids.end(),core_ids.begin(),core_ids.end()))) {
@@ -1550,26 +1556,26 @@ int GSWalk::merge (GSWalk* single, vector<int> core_ids) {
     }
     // nodes clean: do the actual node merging
     each_it(core_ids, vector<int>::iterator) {
-        nodewalk[*it].merge(single->nodewalk[*it]);
+        nodewalk[*it].merge(w->nodewalk[*it]);
     }
     // edge merging
     each_it(core_ids, vector<int>::iterator) {
         edgemap::iterator from = edgewalk.find(*it);
         if (from!=edgewalk.end())   {
-            edgemap::iterator single_from=single->edgewalk.find(from->first);
-            if (single_from == single->edgewalk.end()) {
+            edgemap::iterator w_from=w->edgewalk.find(from->first);
+            if (w_from == w->edgewalk.end()) {
                 cerr << "Error! Can not merge edgewalks with different 'from'-components." << endl; 
                 exit(1);
             }
             map<int, GSWEdge>& e = from->second;
-            map<int, GSWEdge>& se = single_from->second;
+            map<int, GSWEdge>& se = w_from->second;
             for (map<int, GSWEdge>::iterator to=e.begin(); to!=e.end(); to++) {
-                map<int, GSWEdge>::iterator single_to=se.find(to->first);
-                if (single_to == se.end()) {
+                map<int, GSWEdge>::iterator w_to=se.find(to->first);
+                if (w_to == se.end()) {
                     cerr << "Error! Can not merge edgewalks with different 'to'-components." << endl; 
                     exit(1);
                 }
-                to->second.merge(single_to->second);
+                to->second.merge(w_to->second);
             }
         }
     }
