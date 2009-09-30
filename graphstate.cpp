@@ -1403,6 +1403,8 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
                             set<InputEdgeLabel> iel;
                             GSWNode n = { inl, weightmap_a, weightmap_i };
                             GSWEdge e = { to->first, iel, weightmap_a, weightmap_i };
+                            cout << &n << endl;
+                            cout << &e << endl;
                             s->add_edge(from->first, e, n, 0);
                         }
 
@@ -1475,7 +1477,7 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
                 set<InputEdgeLabel> iel;
                 GSWNode n = { inl, weightmap_a, weightmap_i };
                 GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
-                s->add_edge(j, e, n, 0);
+                s->add_edge(j, e, n, 1);
             }
             // if edges have been added to s[j] due to d12, recalculate d21
             if (d12.size()) {
@@ -1508,7 +1510,7 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
                 set<InputEdgeLabel> iel;
                 GSWNode n = { inl, weightmap_a, weightmap_i };
                 GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
-                add_edge(j, e, n, 0);
+                add_edge(j, e, n, 1);
             }
         }
         #ifdef DEBUG
@@ -1626,13 +1628,9 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder) {
     if (!from.second) { cerr << "Error! Key exists while adding an edge. " << endl; exit(1); }
 
     // insert to into nodewalk
-    if (nodewalk.size() == 0) {  
-        map<Tid, int> weightmap_a; 
-        map<Tid, int> weightmap_i; 
-        set<InputNodeLabel> inl;
-        GSWNode n = { inl, weightmap_a, weightmap_i };
-        nodewalk.insert(nodewalk.begin(), n);
+    if (reorder) nodewalk.insert(nodewalk.begin()+e.to, n);
+    else { 
+        if ((e.to) >= nodewalk.size()) nodewalk.resize(e.to+1);                       // resize if necessary
+        nodewalk[e.to] = n;
     }
-    if ((e.to+1)> nodewalk.size()) nodewalk.resize(e.to+1);
-    nodewalk[e.to] = n; 
 }
