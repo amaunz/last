@@ -64,7 +64,7 @@ class PatternTree {
   public:
     PatternTree ( Path &path, unsigned int legindex );
     ~PatternTree ();
-    GSWalk* expand (pair<float, string> max, GSWalk* parentwalk);
+    GSWalk* expand (pair<float, string> max, int parent_size);
     vector<LegPtr> legs; // pointers used to avoid copy-constructor during a resize of the vector
   private:
     void checkIfIndeedNormal ();

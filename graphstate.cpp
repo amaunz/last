@@ -1378,8 +1378,7 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
     // sanity check: core
     if (core_ids.size()>0) {
         sort(core_ids.begin(), core_ids.end()); 
-        // reserve space for next step
-        if (nodewalk.size() < core_ids.size()) return 1;
+        if (nodewalk.size() < core_ids.size()) { cerr << "ERROR! More core ids than nodes." << endl; exit(1); }
         int border=core_ids.back();
         // prepare basic structure: copy core nodes and connecting edges from this to s, if s is empty
         if (s->nodewalk.size() == 0) {
@@ -1403,8 +1402,6 @@ int GSWalk::cd (vector<int> core_ids, GSWalk* s) {
                             set<InputEdgeLabel> iel;
                             GSWNode n = { inl, weightmap_a, weightmap_i };
                             GSWEdge e = { to->first, iel, weightmap_a, weightmap_i };
-                            cout << &n << endl;
-                            cout << &e << endl;
                             s->add_edge(from->first, e, n, 0);
                         }
 
@@ -1609,19 +1606,38 @@ int GSWEdge::merge (GSWEdge e) {
 //! Adds a node refinement for edge e and node n. id of n is nodewalk size.
 //
 void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder) {
+
+    // adapt enumeration of edges
     if (reorder) {
-        // move all 'to'-node ids >= e.to one up
         for (edgemap::iterator from = edgewalk.begin(); from != edgewalk.end(); from++) {
             map<int, GSWEdge>& to_map = from->second;
-            for (map<int, GSWEdge>::iterator to=to_map.begin(); to != to_map.end(); to++ ) {
+
+            for (map<int, GSWEdge>::reverse_iterator to=to_map.rbegin(); to != to_map.rend(); to++ ) {
+
+                // increase all equal or higher to values by 1
                 if (to->first >= e.to) {
-                    GSWEdge val = to->second; val.to++;
-                    map<int, GSWEdge>::iterator tmp = to;
-                    to = (to_map.insert( make_pair ( val.to , val ) )).first;
-                    to_map.erase(tmp);
+                    GSWEdge val = to->second; val.to++; // correct the data...
+                    pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ...and re-insert
+                    if (!p.second) { cerr << "Error! Replaced a value while moving up. This should never happen." << endl; exit(1); }
+                    to = p.first;
+                    to_map.erase(val.to-1);
                 }
+
             }
+
         }
+
+        for (edgemap::reverse_iterator from = edgewalk.rbegin(); from != edgewalk.rend(); from++) {
+
+            if (from->first >= e.to){
+                int i = from->first;
+                edgewalk[i+1]=edgewalk[i];
+                edgewalk.erase(i);
+            }
+
+        }
+
+
     }
     // insert the edge from-to into edgewalk
     pair<map<int, GSWEdge>::iterator, bool> from = edgewalk[f].insert(make_pair(e.to,e));

@@ -426,7 +426,7 @@ bool Path::is_normal ( EdgeLabel edgelabel ) {
 
 
 
-void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
+void Path::expand2 (pair<float,string> max, int parent_size) {
 
   fm::statistics->patternsize++;
   if ( (unsigned) fm::statistics->patternsize > fm::statistics->frequenttreenumbers.size () ) {
@@ -522,6 +522,7 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
         fm::gsp_out=false;
         string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
         if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
+        //fm::die=1;
         //fm::do_yaml=false;
         //fm::gsp_out=true;
         #endif
@@ -552,8 +553,8 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
       ){   // UB-PRUNING
 
       Path path ( *this, index );
-      if (max.first<fm::chisq->p) { fm::updated = true; path.expand2 ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[index]->occurrences.frequency)), gsw); }
-      else path.expand2 (max, gsw);
+      if (max.first<fm::chisq->p) { fm::updated = true; path.expand2 ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[index]->occurrences.frequency)), gsw->nodewalk.size()); }
+      else path.expand2 (max, gsw->nodewalk.size());
     }
     else {
         if (fm::do_backbone && fm::updated) {  // FREE STRUCTURES: search was pruned
@@ -619,8 +620,8 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
      ){   // UB-PRUNING
 
       Path path ( *this, index );
-      if (max.first<fm::chisq->p) { fm::updated = true; path.expand2 ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[index]->occurrences.frequency)), gsw); }
-      else path.expand2 (max, gsw);
+      if (max.first<fm::chisq->p) { fm::updated = true; path.expand2 ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[index]->occurrences.frequency)), gsw->nodewalk.size()); }
+      else path.expand2 (max, gsw->nodewalk.size());
     }
     else {
         if (fm::do_backbone && fm::updated) { // FREE STRUCTURES: search was pruned
@@ -648,7 +649,6 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
   // horizontal view: cd will merge into siblingwalk
   // NOTE: siblingwalk is intended to 'carry' the growing meta pattern
   GSWalk* siblingwalk = new GSWalk();
-  GSWalk* topdown = NULL;
 
   for ( unsigned int i = 0; i < legs.size (); i++ ) {
     PathTuple &tuple = legs[i]->tuple;
@@ -664,6 +664,8 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
 
           // single view: this individual pattern
           GSWalk* gsw = new GSWalk();
+          int gsw_size;
+          GSWalk* topdown = NULL;
 
           if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
           fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
@@ -675,10 +677,11 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
                if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
                    // print to graphstate walk, the if-checks are needed
                    fm::graphstate->print(gsw);
+                   gsw_size=gsw->nodewalk.size();
                    // get core ids
-                   vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
+                   vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
                    // merge to siblingwalk
-                   gsw->cd(core_ids, siblingwalk); 
+                   gsw->cd(core_ids, siblingwalk);
                }
           }
 
@@ -699,13 +702,13 @@ void Path::expand2 (pair<float,string> max, GSWalk* parentwalk) {
                    else fm::graphstate->print(legs[i]->occurrences.frequency);
               }
               // expand using individual pattern as parent
-              if (max.first<fm::chisq->p) { fm::updated = true; topdown = tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
-              else topdown = tree.expand (max, gsw);
+              if (max.first<fm::chisq->p) { fm::updated = true; topdown = tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw_size); }
+              else topdown = tree.expand (max, gsw_size);
               // merge to siblingwalk
               if ((topdown != NULL) && fm::die) {
                    if (topdown->edgewalk.size()) {
                         // get core ids
-                        vector<int> core_ids; for (int i=0; i<siblingwalk->nodewalk.size(); i++) core_ids.push_back(i);
+                        vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
                         #ifdef DEBUG
                         if (fm::die) {
                             cout << "TOPDOWN BEGIN " << core_ids.size() << endl;
@@ -791,7 +794,7 @@ void Path::expand () {
       // RECURSE
       Path path (*this, i);
       fm::updated = true;
-      path.expand2 (pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw);
+      path.expand2 (pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw->nodewalk.size());
       fm::graphstate->deleteNode ();
 
     }

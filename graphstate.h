@@ -167,6 +167,7 @@ class GSWalk {
       int merge (GSWalk* single, vector<int> core_ids);
 
       void add_edge(int f, GSWEdge e, GSWNode n, bool reorder);
+      void up_edge(int i);
       static bool lt_to_map (pair<int, GSWEdge> a, pair<int, GSWEdge> b) {
         if (a.first < b.first) return 1;
         return 0;

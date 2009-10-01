@@ -829,7 +829,7 @@ PatternTree::PatternTree ( PatternTree &parenttree, unsigned int legindex ) {
   }
 }
 
-GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
+GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
 
   fm::statistics->patternsize++;
   if ( fm::statistics->patternsize > (int) fm::statistics->frequenttreenumbers.size () ) {
@@ -863,6 +863,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
 
     // new current pattern
     GSWalk* gsw = new GSWalk();
+    int gsw_size;
     GSWalk* topdown = NULL;
 
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
@@ -875,7 +876,8 @@ GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
  
        if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            fm::graphstate->print(gsw);      // print to graphstate walk, checks are needed
-           vector<int> core_ids; for (int i=0; i<parentwalk->nodewalk.size(); i++) core_ids.push_back(i);
+           gsw_size = gsw->nodewalk.size();
+           vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
            gsw->cd(core_ids, siblingwalk); // merge to siblingwalk
        }
    
@@ -899,13 +901,13 @@ GSWalk* PatternTree::expand (pair<float, string> max, GSWalk* parentwalk) {
             if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
             else fm::graphstate->print(legs[i]->occurrences.frequency);
         }
-        if (fm::chisq->p > max.first) { fm::updated = true; topdown = p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw); }
-        else topdown = p.expand (max, gsw);
+        if (fm::chisq->p > max.first) { fm::updated = true; topdown = p.expand (pair<float, string>(fm::chisq->p,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw_size); }
+        else topdown = p.expand (max, gsw_size);
         // merge to siblingwalk
         if ((topdown != NULL) && fm::die) {
            if (topdown->edgewalk.size()) {
                 // get core ids
-                vector<int> core_ids; for (int i=0; i<siblingwalk->nodewalk.size(); i++) core_ids.push_back(i);
+                vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
                 #ifdef DEBUG
                 if (fm::die) {
                     cout << "TOPDOWN2 BEGIN " << core_ids.size() << endl;
