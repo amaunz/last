@@ -878,7 +878,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
            fm::graphstate->print(gsw);      // print to graphstate walk, checks are needed
            gsw_size = gsw->nodewalk.size();
            vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
-           gsw->cd(core_ids, siblingwalk); // merge to siblingwalk
+           gsw->conflict_resolution(core_ids, siblingwalk); // merge to siblingwalk
        }
    
     }
@@ -916,7 +916,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
                     cout << siblingwalk << endl;
                 }
                 #endif
-                topdown->cd(core_ids, siblingwalk); 
+                topdown->conflict_resolution(core_ids, siblingwalk); 
                 #ifdef DEBUG
                 if (fm::die) {
                     cout << "TOPDOWN2 END " << core_ids.size() << endl;

@@ -129,7 +129,7 @@ struct GSWNode {
     set<InputNodeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
-    int merge(GSWNode n);
+    int stack(GSWNode n);
     friend ostream& operator<< (ostream &out, GSWNode* n);
 };
 
@@ -142,7 +142,7 @@ struct GSWEdge {
     set<InputEdgeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
-    int merge(GSWEdge e);
+    int stack(GSWEdge e);
     static bool lt_to (GSWEdge& e1, GSWEdge& e2){
         if (e1.to < e2.to) return 1;
         return 0;
@@ -163,8 +163,8 @@ class GSWalk {
       nodevector temp_nodewalk;
       edgemap temp_edgewalk;
 
-      int cd (vector<int> core_ids, GSWalk* s);
-      int merge (GSWalk* single, vector<int> core_ids);
+      int conflict_resolution (vector<int> core_ids, GSWalk* s);
+      int stack (GSWalk* single, vector<int> core_ids);
 
       void add_edge(int f, GSWEdge e, GSWNode n, bool reorder);
       void up_edge(int i);

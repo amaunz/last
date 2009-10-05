@@ -646,7 +646,7 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
       if (fm::do_output && !fm::console_out && fm::result->size() && (fm::result->back()!=fm::graphstate->sep())) (*fm::result) << fm::graphstate->sep();
   }
 
-  // horizontal view: cd will merge into siblingwalk
+  // horizontal view: conflict_resolution will merge into siblingwalk
   // NOTE: siblingwalk is intended to 'carry' the growing meta pattern
   GSWalk* siblingwalk = new GSWalk();
 
@@ -681,7 +681,7 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                    // get core ids
                    vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
                    // merge to siblingwalk
-                   gsw->cd(core_ids, siblingwalk);
+                   gsw->conflict_resolution(core_ids, siblingwalk);
                }
           }
 
@@ -717,7 +717,7 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                             cout << siblingwalk << endl;
                         }
                         #endif
-                        topdown->cd(core_ids, siblingwalk); 
+                        topdown->conflict_resolution(core_ids, siblingwalk); 
                         #ifdef DEBUG
                         if (fm::die) {
                             cout << "TOPDOWN END " << core_ids.size() << endl;
