@@ -879,30 +879,35 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
   
        if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
            bool stop_criterium=0;
-           siblingoccurrences.resize(siblingoccurrences.size() + 1);
-           map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); siblingoccurrences.back().insert(*it); }
-           map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); siblingoccurrences.back().insert(*it); }
-           if (siblingoccurrences.size()>1) {
+           vector<set<Tid> > thisoccurrences;
+           thisoccurrences.resize(1);
+           map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
+           map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
+           vector<set<Tid> >::iterator th_it = thisoccurrences.end(); th_it--;
+
+           if (siblingoccurrences.size()) {
                 set<Tid> si; set<Tid> sdi; set<Tid> sdim1;
                 vector<set<Tid> >::iterator so_it = siblingoccurrences.end(); so_it--;
 
-                set_intersection(so_it->begin(),so_it->end(), (so_it-1)->begin(), (so_it-1)->end(), std::inserter(si, si.end()));
+                set_intersection(so_it->begin(),so_it->end(), (th_it)->begin(), (th_it)->end(), std::inserter(si, si.end()));
                 set_difference(so_it->begin(),so_it->end(), si.begin(), si.end(), std::inserter(sdi, sdi.end()));
-                set_difference((so_it-1)->begin(),(so_it-1)->end(), si.begin(), si.end(), std::inserter(sdim1, sdim1.end()));
+                set_difference((th_it)->begin(),(th_it)->end(), si.begin(), si.end(), std::inserter(sdim1, sdim1.end()));
 
                 if (sdi.size()+sdim1.size()>si.size()) stop_criterium=1;
            }
            fm::graphstate->print(gsw, weightmap_a, weightmap_i); // print to graphstate walk
            gsw_size = gsw->nodewalk.size();
            vector<int> core_ids; for (int j=0; j<parent_size; j++) core_ids.push_back(j);
-           #ifdef DEBUG
-               if (stop_criterium) cout << "STOP CRITERIUM at POS " << i << endl;
-           #endif
+           //#ifdef DEBUG
+               if (stop_criterium) cout << "STOP CRITERIUM at POS " << siblingoccurrences.size() << endl;
+           //#endif
            if (stop_criterium) { 
                 cout << siblingwalk << endl; 
                 delete siblingwalk;
                 siblingwalk = new GSWalk();
+                siblingoccurrences.clear();
            }
+           siblingoccurrences.push_back(thisoccurrences.back());
            // merge to siblingwalk
            gsw->conflict_resolution(core_ids, siblingwalk); 
        }
@@ -1050,7 +1055,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
         }
         os << ">";
 
-        #ifdef DEBUG 
+        //#ifdef DEBUG 
         os << " { ";
         for (map<Tid, int>::iterator it2=it->a.begin(); it2!=it->a.end(); it2++) {
             os << it2->first << "->" << it2->second << " ";
@@ -1062,7 +1067,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             os << it2->first << "->" << it2->second << " ";
         }
         os << "}" ;
-        #endif
+        //#endif
         os << endl;
     }
 
@@ -1080,7 +1085,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             }
             os << ">";
 
-            #ifdef DEBUG 
+            //#ifdef DEBUG 
             os << " { ";
             for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
                 os << it3->first << "->" << it3->second << " ";
@@ -1092,7 +1097,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
                 os << it3->first << "->" << it3->second << " ";
             }
             os << "}";
-            #endif
+            //#endif
 
             os << endl;
         }

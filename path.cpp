@@ -686,19 +686,23 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                    else fm::graphstate->print(legs[i]->occurrences.frequency);
                }
 
+               // print to graphstate walk, checks are needed
                if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
                    bool stop_criterium=0;
-                   // print to graphstate walk, checks are needed
-                   siblingoccurrences.resize(siblingoccurrences.size() + 1);
-                   map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); siblingoccurrences.back().insert(*it); }
-                   map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); siblingoccurrences.back().insert(*it); }
-                   if (siblingoccurrences.size()>1) {
+                   vector<set<Tid> > thisoccurrences;
+                   thisoccurrences.resize(1);
+                   map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
+                   map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
+                   vector<set<Tid> >::iterator th_it = thisoccurrences.end(); th_it--;
+
+                   if (siblingoccurrences.size()) {
                        set<Tid> si; set<Tid> sdi; set<Tid> sdim1;
                        vector<set<Tid> >::iterator so_it = siblingoccurrences.end(); so_it--;
+                        
 
-                       set_intersection(so_it->begin(),so_it->end(), (so_it-1)->begin(), (so_it-1)->end(), std::inserter(si, si.end()));
+                       set_intersection(so_it->begin(),so_it->end(), (th_it)->begin(), (th_it)->end(), std::inserter(si, si.end()));
                        set_difference(so_it->begin(),so_it->end(), si.begin(), si.end(), std::inserter(sdi, sdi.end()));
-                       set_difference((so_it-1)->begin(),(so_it-1)->end(), si.begin(), si.end(), std::inserter(sdim1, sdim1.end()));
+                       set_difference((th_it)->begin(),(th_it)->end(), si.begin(), si.end(), std::inserter(sdim1, sdim1.end()));
 
                        if (sdi.size()+sdim1.size()>si.size()) stop_criterium=1;
                    }
@@ -706,14 +710,16 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                    gsw_size=gsw->nodewalk.size();
                    // get core ids
                    vector<int> core_ids; for (int j=0; j<parent_size; j++) core_ids.push_back(j);
-                   #ifdef DEBUG
-                       if (stop_criterium) cout << "STOP CRITERIUM at POS " << i << endl;
-                   #endif
+                   //#ifdef DEBUG
+                       if (stop_criterium) cout << "STOP CRITERIUM at POS " << siblingoccurrences.size() << endl;
+                   // #endif
                    if (stop_criterium) { 
                        cout << siblingwalk << endl;
                        delete siblingwalk;
                        siblingwalk = new GSWalk();
+                       siblingoccurrences.clear();
                    }
+                   siblingoccurrences.push_back(thisoccurrences.back());
                    // merge to siblingwalk
                    gsw->conflict_resolution(core_ids, siblingwalk);
                }
