@@ -355,16 +355,9 @@ void GraphState::print ( FILE *f ) {
 
 // GENERATE VECTOR REPRESENTATIONS FOR LATENT STRUCTURE MINING
 
-void GraphState::print ( GSWalk* gsw ) {
+void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> weightmap_i ) {
 
   // convert occurrence lists to weight maps with initial weight 1
-
-  map<Tid, int> weightmap_a; 
-  each_it(fm::chisq->fa_set, set<Tid>::iterator) weightmap_a.insert(make_pair((*it),1));
-  
-  map<Tid, int> weightmap_i;
-  each_it(fm::chisq->fi_set, set<Tid>::iterator) weightmap_i.insert(make_pair((*it),1));
-
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     set<InputNodeLabel> inl; inl.insert(fm::database->nodelabels[nodes[i].label].inputlabel);
     gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i } );

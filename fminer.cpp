@@ -135,6 +135,8 @@ void Fminer::Defaults() {
     fm::bbrc_sep=false;
     fm::most_specific_trees_only=false;
     fm::line_nrs=false;
+    // LAST
+    fm::do_last=true;
 
     fm::updated = true;
     fm::do_yaml=true;

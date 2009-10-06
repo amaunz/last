@@ -107,7 +107,7 @@ class GraphState {
     void reinsertEdge (); // reinserts last edge on the stack
     NodeId lastNode () const { return nodes.size () - 1; }
 
-    void print ( GSWalk* gsw); 
+    void print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> weightmap_i ); 
 
     void print ( FILE *f );
     void DfsOut(int cur_n, int from_n);

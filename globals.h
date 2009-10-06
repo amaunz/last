@@ -43,6 +43,7 @@ namespace fm {
     bool most_specific_trees_only;
     bool line_nrs;
     int die;
+    bool do_last;
 
     Database* database=NULL;
     Statistics* statistics=NULL;

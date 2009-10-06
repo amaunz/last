@@ -36,6 +36,7 @@ namespace fm {
     extern bool do_yaml;
     extern bool gsp_out;
     extern int die;
+    extern bool do_last;
 
     extern Database* database;
     extern ChisqConstraint* chisq;
@@ -845,7 +846,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     
   if (fm::do_backbone && (legs.size()==0)) {
     if (fm::updated)
-        if (fm::do_output) {
+        if (fm::do_output && !fm::do_last) {
             if (!fm::console_out) { 
                (*fm::result) << max.second;
             }
@@ -858,8 +859,9 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
 
   // new siblingwalk
   GSWalk* siblingwalk = new GSWalk();
+  vector<set<Tid> >siblingoccurrences;
 
-  for ( int i = legs.size () - 1; i >= 0; i-- ) {
+  for ( int i=legs.size()-1; i>=0; i-- ) {
 
     // new current pattern
     GSWalk* gsw = new GSWalk();
@@ -869,18 +871,41 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
     fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.label, legs[i]->occurrences.maxdegree );
     if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
-
- 
-       if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
-       else fm::graphstate->print(legs[i]->occurrences.frequency);
- 
-       if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-           fm::graphstate->print(gsw);      // print to graphstate walk, checks are needed
-           gsw_size = gsw->nodewalk.size();
-           vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
-           gsw->conflict_resolution(core_ids, siblingwalk); // merge to siblingwalk
+    
+       if (!fm::do_last) {
+           if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
+           else fm::graphstate->print(legs[i]->occurrences.frequency);
        }
-   
+  
+       if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
+           bool stop_criterium=0;
+           siblingoccurrences.resize(siblingoccurrences.size() + 1);
+           map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); siblingoccurrences.back().insert(*it); }
+           map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); siblingoccurrences.back().insert(*it); }
+           if (siblingoccurrences.size()>1) {
+                set<Tid> si; set<Tid> sdi; set<Tid> sdim1;
+                vector<set<Tid> >::iterator so_it = siblingoccurrences.end(); so_it--;
+
+                set_intersection(so_it->begin(),so_it->end(), (so_it-1)->begin(), (so_it-1)->end(), std::inserter(si, si.end()));
+                set_difference(so_it->begin(),so_it->end(), si.begin(), si.end(), std::inserter(sdi, sdi.end()));
+                set_difference((so_it-1)->begin(),(so_it-1)->end(), si.begin(), si.end(), std::inserter(sdim1, sdim1.end()));
+
+                if (sdi.size()+sdim1.size()>si.size()) stop_criterium=1;
+           }
+           fm::graphstate->print(gsw, weightmap_a, weightmap_i); // print to graphstate walk
+           gsw_size = gsw->nodewalk.size();
+           vector<int> core_ids; for (int j=0; j<parent_size; j++) core_ids.push_back(j);
+           #ifdef DEBUG
+               if (stop_criterium) cout << "STOP CRITERIUM at POS " << i << endl;
+           #endif
+           if (stop_criterium) { 
+                cout << siblingwalk << endl; 
+                delete siblingwalk;
+                siblingwalk = new GSWalk();
+           }
+           // merge to siblingwalk
+           gsw->conflict_resolution(core_ids, siblingwalk); 
+       }
     }
 
     // RECURSE
@@ -897,7 +922,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     
     ) {   // UB-PRUNING
         PatternTree p ( *this, i );
-        if (fm::most_specific_trees_only && fm::do_output && !fm::do_backbone && p.legs.size() == 0) {
+        if (!fm::do_last && fm::most_specific_trees_only && fm::do_output && !fm::do_backbone && p.legs.size() == 0) {
             if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
             else fm::graphstate->print(legs[i]->occurrences.frequency);
         }
@@ -931,7 +956,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     }
     else {
         if (fm::do_backbone && fm::updated) {
-            if (fm::do_output) {
+            if (fm::do_output && !fm::do_last) {
                 if (!fm::console_out) {
                     (*fm::result) << max.second;
                 }
@@ -1074,6 +1099,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
     }
     return os;
 };
+
 
 ostream& operator<< (ostream& os, GSWEdge* gswe) {
     typedef map<Tid,int> mmap;
