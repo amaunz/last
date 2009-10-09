@@ -44,6 +44,7 @@ namespace fm {
     bool line_nrs;
     int die;
     bool do_last;
+    unsigned int last_hops;
 
     Database* database=NULL;
     Statistics* statistics=NULL;

@@ -42,6 +42,7 @@ namespace fm {
     extern bool gsp_out;
     extern bool die;
     extern bool do_last;
+    extern unsigned int last_hops;
 
     extern Database* database;
     extern ChisqConstraint* chisq;
@@ -522,8 +523,8 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
         fm::do_yaml=true;
         fm::gsp_out=false;
         string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
-        if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
-        //fm::die=1;
+        //if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
+        fm::die=1;
         //fm::do_yaml=false;
         //fm::gsp_out=true;
         #endif
@@ -676,6 +677,9 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
           GSWalk* gsw = new GSWalk();
           int gsw_size;
           GSWalk* topdown = NULL;
+          bool stop_criterium=0;
+          vector<set<Tid> > thisoccurrences;
+          vector<int> core_ids; 
 
           if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
           fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
@@ -688,8 +692,6 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
 
                // print to graphstate walk, checks are needed
                if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-                   bool stop_criterium=0;
-                   vector<set<Tid> > thisoccurrences;
                    thisoccurrences.resize(1);
                    map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
                    map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
@@ -709,19 +711,7 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                    fm::graphstate->print(gsw, weightmap_a, weightmap_i);
                    gsw_size=gsw->nodewalk.size();
                    // get core ids
-                   vector<int> core_ids; for (int j=0; j<parent_size; j++) core_ids.push_back(j);
-                   //#ifdef DEBUG
-                       if (stop_criterium) cout << "STOP CRITERIUM at POS " << siblingoccurrences.size() << endl;
-                   // #endif
-                   if (stop_criterium) { 
-                       cout << siblingwalk << endl;
-                       delete siblingwalk;
-                       siblingwalk = new GSWalk();
-                       siblingoccurrences.clear();
-                   }
-                   siblingoccurrences.push_back(thisoccurrences.back());
-                   // merge to siblingwalk
-                   gsw->conflict_resolution(core_ids, siblingwalk);
+                   for (int j=0; j<parent_size; j++) core_ids.push_back(j);
                }
           }
 
@@ -745,7 +735,7 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
               if (max.first<fm::chisq->p) { fm::updated = true; topdown = tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw_size); }
               else topdown = tree.expand (max, gsw_size);
               // merge to siblingwalk
-              if ((topdown != NULL) && fm::die) {
+              if (topdown != NULL) {
                    if (topdown->edgewalk.size()) {
                         // get core ids
                         vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
@@ -768,6 +758,22 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                         #endif
                    }
               }
+
+              //#ifdef DEBUG
+              if (stop_criterium) cout << "STOP CRITERIUM at POS " << siblingoccurrences.size() << " HOPS " << fm::last_hops << endl;
+              // #endif
+              if (stop_criterium) { 
+                  cout << siblingwalk << endl;
+                  delete siblingwalk;
+                  siblingwalk = new GSWalk();
+                  siblingoccurrences.clear();
+                  fm::last_hops=0;
+              }
+              siblingoccurrences.push_back(thisoccurrences.back());
+              // merge to siblingwalk
+              gsw->conflict_resolution(core_ids, siblingwalk);
+              fm::last_hops++;
+
               delete topdown;
           }
           else {

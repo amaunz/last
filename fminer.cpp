@@ -137,6 +137,7 @@ void Fminer::Defaults() {
     fm::line_nrs=false;
     // LAST
     fm::do_last=true;
+    fm::last_hops=0;
 
     fm::updated = true;
     fm::do_yaml=true;
