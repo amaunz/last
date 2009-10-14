@@ -1063,6 +1063,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
         os << ">";
 
         //#ifdef DEBUG 
+        /*
         os << " { ";
         for (map<Tid, int>::iterator it2=it->a.begin(); it2!=it->a.end(); it2++) {
             os << it2->first << "->" << it2->second << " ";
@@ -1074,6 +1075,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             os << it2->first << "->" << it2->second << " ";
         }
         os << "}" ;
+        */
         //#endif
         os << endl;
     }
@@ -1093,6 +1095,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             os << ">";
 
             //#ifdef DEBUG 
+            /*
             os << " { ";
             for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
                 os << it3->first << "->" << it3->second << " ";
@@ -1104,6 +1107,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
                 os << it3->first << "->" << it3->second << " ";
             }
             os << "}";
+            */
             //#endif
 
             os << endl;
@@ -1121,6 +1125,7 @@ ostream& operator<< (ostream& os, GSWEdge* gswe) {
         os << *it << " ";
     }
     os << "> ";
+    /*
     os << "<";
     each_it(gswe->a, mmap::iterator) {
         os << it->first << "->" << it->second << " ";
@@ -1131,6 +1136,7 @@ ostream& operator<< (ostream& os, GSWEdge* gswe) {
         os << it->first << "->" << it->second << " ";
     }
     os << "> ";
+    */
 }
 
 ostream& operator<< (ostream& os, GSWNode* gswn) {
@@ -1140,6 +1146,7 @@ ostream& operator<< (ostream& os, GSWNode* gswn) {
         os << *it << " ";
     }
     os << "> ";
+    /*
     os << "<";
     each_it(gswn->a, mmap::iterator) {
         os << it->first << "->" << it->second << " ";
@@ -1150,4 +1157,5 @@ ostream& operator<< (ostream& os, GSWNode* gswn) {
         os << it->first << "->" << it->second << " ";
     }
     os << "> ";
+    */
 }
