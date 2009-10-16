@@ -1449,7 +1449,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
 
             // Gather candidate edges for all core ids!
             int core_ids_size = core_ids.size();
-            for (int index = 0; index<core_ids.size(); index++) {
+            for (int index = 0; index<core_ids_size; index++) {
                 int j = core_ids[index];
                 d1.clear();  
                 d2.clear();
@@ -1490,10 +1490,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
                     }
                     #endif
                     u12.insert(*it);
-                    //core_ids.push_back(*it);
-                    //core_ids_size++;
                 }
-                //if (c12.size()) break;
         
                 // single edges
                 each_it(d21, set<int>::iterator) {
@@ -1593,6 +1590,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
             }
             #endif
 
+            core_ids_size=core_ids.size();
+
         } while (einsert21.size() || einsert12.size()); // Finished all edges for core ids
         #ifdef DEBUG
         if (fm::die) {
@@ -1603,13 +1602,11 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
 
 
         #ifdef DEBUG
-        /*
         if (fm::die) {
             cout << this << endl;
             cout << s << endl;
         }
         cout << "-stack-" << endl;
-        */
         #endif
 
         // stack labels and activities to s
@@ -1717,42 +1714,33 @@ int GSWEdge::stack (GSWEdge e) {
 //! Adds a node refinement for edge e and node n.
 //
 void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* core_ids, set<int>* u12) {
-    // adjust enumeration of edges
     cout << "e.to " << e.to << endl;
-    cout << "TO_NODES_EX: '";
+    cout << "to-nodes ex: '";
     each_it(to_nodes_ex, vector<int>::iterator) { cout << *it << " "; }
     cout << "'" << endl;
-
-    if (reorder==0) { cout << "REORDER" << endl; }
-
-    // in one iteration patterns are ordered ascending, but not between iterations
-    bool reorder2=1;
+    
+    // to-node in existing positions?
+    bool to_in_ex=0;
     vector<int>::iterator it = find(to_nodes_ex.begin(), to_nodes_ex.end(), e.to);
-    if (it != to_nodes_ex.end()) reorder2=0;
+    if (it!=to_nodes_ex.end()) { to_in_ex=1; cout << "to in ex" << endl;}
 
-    // pattern initialization protected against move
-    bool reorder3=1;
-    vector<int>::iterator it2 = find(core_ids->begin(), core_ids->end(), e.to);
-    if (it2 != core_ids->end()) { reorder3=0; cout << "REORDER3" << endl; }
-
-    bool core_to_core=0;
-    vector<int>::iterator it3 = find(core_ids->begin(), core_ids->end(), f);
-    if (it3 != core_ids->end() && !reorder3) { core_to_core=1; cout << "CORE_TO_CORE" << endl; }
-
+    // to-core-range?
+    bool to_core_range=0;
+    if ((e.to >= *(core_ids->begin())) && (e.to <= *(core_ids->end()-1))) { to_core_range=1; cout << "to in core range" << endl; }
     bool moved_to_ex=0;
 
-    if (reorder && reorder2 && (reorder3 || core_to_core)) { // 'hard' insertion: reorder edges by moving 1 up
-        cout << "reorder" << endl;
+    if (reorder && !to_in_ex) { // 'hard' insertion: reorder edges by moving 1 up
 
-        // we are not initializing! (reorder!=0)
-        if (core_to_core) {
-            for (vector<int>::iterator it = core_ids->begin(); it!=core_ids->end(); it++) { // increase core nodes by 1
+        if (to_core_range) {
+            // move core!
+            for (vector<int>::iterator it = core_ids->begin(); it!=core_ids->end(); it++) {
                 if (*it >= e.to) (*it) = (*it+1);
             }
+            // move u12!
             set<int> u12_new;
-            for (set<int>::iterator it = u12->begin(); it!=u12->end(); it++) {           // increase u12 nodes by 1
-                if (*it >= e.to) { u12_new.insert(*it+1); cout << "u12 ref: " << *it+1 << endl; }
-                else { u12_new.insert(*it); cout << "u12 ref: " << *it << endl; }
+            for (set<int>::iterator it = u12->begin(); it!=u12->end(); it++) {
+                if (*it >= e.to) u12_new.insert(*it+1);
+                else u12_new.insert(*it);
             }
             u12->clear(); u12->insert(u12_new.begin(), u12_new.end());
         }
@@ -1766,7 +1754,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
             for (; to != to_map.begin(); ) {
                 // increase all to-values equal or higher by 1
                 cout << "to->first " << to->first << endl;
-                if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || core_to_core)) {
+                if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                     GSWEdge val = to->second; val.to++; // correct the data ...
                     vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
                     pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
@@ -1779,7 +1767,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
             if (to == to_map.begin()) {
                 // increase all to-values equal or higher by 1 (last element)
                 cout << "to->first " << to->first << endl;
-                if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || core_to_core)) {
+                if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                     GSWEdge val = to->second; val.to++; // correct the data ...
                     vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
                     pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
@@ -1791,7 +1779,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
         }
         // increase all from-values equal or higher by 1
         for (edgemap::reverse_iterator from = edgewalk.rbegin(); from != edgewalk.rend(); from++) {
-            if (from->first >= e.to){
+            if (from->first >= e.to) {
                 int i = from->first;
                 edgewalk[i+1]=edgewalk[i];
                 edgewalk.erase(i);
@@ -1817,17 +1805,15 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                 nodewalk[e.to]=n;
             }
             else {
-                if (reorder3 || core_to_core) { 
-                    if (!reorder2) {                                   // case 2: 'soft'-insertion
-                        nodewalk[e.to]=n;
-                        to_nodes_ex.erase(it);                         // (must unremember now-used slot)
-                    }
-                    else {
-                        nodewalk.insert(nodewalk.begin()+e.to, n);     // case 3: 'hard'-insertion
-                        each_it(to_nodes_ex, vector<int>::iterator) {
-                            if ((*it)>=e.to) { 
-                                (*it)=(*it+1);                         // (must update some slots)
-                            }
+                if (to_in_ex) {                                    // case 2: 'soft'-insertion
+                    nodewalk[e.to]=n;
+                    to_nodes_ex.erase(it);                         // (must unremember now-used slot)
+                }
+                else {
+                    nodewalk.insert(nodewalk.begin()+e.to, n);     // case 3: 'hard'-insertion
+                    each_it(to_nodes_ex, vector<int>::iterator) {
+                        if ((*it)>=e.to) { 
+                            (*it)=(*it+1);                         // (must update some slots)
                         }
                     }
                 }
