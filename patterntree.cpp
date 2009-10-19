@@ -936,7 +936,15 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
                     cout << siblingwalk << endl;
                 }
                 #endif
+
+                if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) {
+                    cerr << "Error! Already nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1);
+                }
                 topdown->conflict_resolution(core_ids, siblingwalk); 
+                if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) {
+                    cerr << "Error! Still nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1);
+                }
+
                 #ifdef DEBUG
                 if (fm::die) {
                     cout << "TOPDOWN2 END " << core_ids.size() << endl;
@@ -961,7 +969,14 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         }
         siblingoccurrences.push_back(thisoccurrences.back());
         // merge to siblingwalk
+        if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) {
+             cerr << "Error! Already nodes marked as available. " << gsw->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1);
+        }
         gsw->conflict_resolution(core_ids, siblingwalk); 
+        if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) {
+             cerr << "Error! Still nodes marked as available. " << gsw->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1);
+        }
+
         fm::last_hops++;
 
         delete topdown;

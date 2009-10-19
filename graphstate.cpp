@@ -1386,6 +1386,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         map<int, map<int, GSWEdge> > einsert12; 
         //  ^^^      ^^^    
         //  to       from
+        set<int> c12_inc;
 
         sort(core_ids.begin(), core_ids.end()); 
         if (nodewalk.size() < core_ids.size()) { cerr << "ERROR! More core ids than nodes." << endl; exit(1); }
@@ -1415,7 +1416,6 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
             }
         } 
         
-
        
         // Do ... while still edges unexpanded for core ids 
         do {
@@ -1438,12 +1438,13 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
             einsert21.clear();
             ninsert12.clear();
             einsert12.clear();
+            c12_inc.clear();
 
             #ifdef DEBUG
             if (fm::die) {
-                cerr << "U12: ";
+                cerr << "U12: '";
                 each_it(u12, set<int>::iterator) cerr << *it << " "; 
-                cerr << endl;
+                cerr << "'" <<endl;
             }
             #endif
 
@@ -1489,7 +1490,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
                         cout << ">" << endl;
                     }
                     #endif
-                    u12.insert(*it);
+                    c12_inc.insert(*it);
                 }
         
                 // single edges
@@ -1545,9 +1546,17 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
             } // end for core ids
 
             
-            // Decide which edge to insert, then do it!
             map<int, map<int, GSWEdge> >::iterator it21 = einsert21.begin();
             map<int, map<int, GSWEdge> >::iterator it12 = einsert12.begin();
+            // Insert lowest conflict edge!
+            if ( c12_inc.size() ) {
+                if ( (it21 == einsert21.end()) || (*c12_inc.begin() < it21->first) ) {
+                    if ( (it12 == einsert12.end()) || (*c12_inc.begin() < it12->first) ) {
+                        u12.insert(*c12_inc.begin());
+                    }
+                }
+            }
+            // Decide which edge to insert, then do it!
             if ( it21 != einsert21.end() || it12 != einsert12.end() ) {
                 bool insertion_done = 0;
                 if (it21 != einsert21.end()) {
@@ -1600,7 +1609,6 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         #endif
        
 
-
         #ifdef DEBUG
         if (fm::die) {
             cout << this << endl;
@@ -1624,8 +1632,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         }
         cout << "-end-" << endl;
         #endif
-
-    
+   
         // calculate one step core ids 
         if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s);
 
@@ -1721,68 +1728,72 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     
     // to-node in existing positions?
     bool to_in_ex=0;
-    vector<int>::iterator it = find(to_nodes_ex.begin(), to_nodes_ex.end(), e.to);
-    if (it!=to_nodes_ex.end()) { to_in_ex=1; cout << "to in ex" << endl;}
+    vector<int>::iterator it_ex = find(to_nodes_ex.begin(), to_nodes_ex.end(), e.to);
+    if (it_ex!=to_nodes_ex.end()) { to_in_ex=1; cout << "to in ex" << endl;}
 
     // to-core-range?
     bool to_core_range=0;
     if ((e.to >= *(core_ids->begin())) && (e.to <= *(core_ids->end()-1))) { to_core_range=1; cout << "to in core range" << endl; }
+    if (reorder && find(core_ids->begin(), core_ids->end(), e.to) != core_ids->end()) { cerr << "Error! e.to is a core-id." << endl; exit(1); }
     bool moved_to_ex=0;
 
     if (reorder && !to_in_ex) { // 'hard' insertion: reorder edges by moving 1 up
 
         if (to_core_range) {
-            // move core!
-            for (vector<int>::iterator it = core_ids->begin(); it!=core_ids->end(); it++) {
-                if (*it >= e.to) (*it) = (*it+1);
+            // find current edge
+            GSWEdge val; edgemap::iterator it;
+            for (it=edgewalk.begin(); it!=edgewalk.end(); it++) {
+                if (it->second.find(e.to) != it->second.end()) {
+                    val = edgewalk[it->first][e.to]; break;
+                }
             }
-            // move u12!
-            set<int> u12_new;
-            for (set<int>::iterator it = u12->begin(); it!=u12->end(); it++) {
-                if (*it >= e.to) u12_new.insert(*it+1);
-                else u12_new.insert(*it);
-            }
-            u12->clear(); u12->insert(u12_new.begin(), u12_new.end());
+            // move edge away
+            if (u12->size()) { val.to= (*(--(u12->end())))+1 ; }
+            int coreback=(core_ids->back())+1; if (coreback>val.to) val.to=coreback;
+            add_edge(it->first, val, nodewalk[e.to], 1, core_ids, u12 );
+            edgewalk[it->first].erase(e.to);
         }
 
-        for (edgemap::iterator from = edgewalk.begin(); from != edgewalk.end(); from++) {
-            map<int, GSWEdge>& to_map = from->second;
-            cout << endl << from->first << " to" << endl;
-            cout << "to_map size: " << to_map.size() << endl;
-            map<int, GSWEdge>::iterator to=to_map.end();
-            to--;
-            for (; to != to_map.begin(); ) {
-                // increase all to-values equal or higher by 1
-                cout << "to->first " << to->first << endl;
-                if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
-                    GSWEdge val = to->second; val.to++; // correct the data ...
-                    vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
-                    pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
-                    if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
-                    cout << "    " << val.to-1 << "->" << val.to << endl;
-                    to_map.erase(to--);
+        else {
+            for (edgemap::iterator from = edgewalk.begin(); from != edgewalk.end(); from++) {
+                map<int, GSWEdge>& to_map = from->second;
+                cout << endl << from->first << " to" << endl;
+                cout << "to_map size: " << to_map.size() << endl;
+                map<int, GSWEdge>::iterator to=to_map.end();
+                to--;
+                for (; to != to_map.begin(); ) {
+                    // increase all to-values equal or higher by 1
+                    cout << "to->first " << to->first << endl;
+                    if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
+                        GSWEdge val = to->second; val.to++; // correct the data ...
+                        vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
+                        pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
+                        if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
+                        cout << "    " << val.to-1 << "->" << val.to << endl;
+                        to_map.erase(to--);
+                    }
+                    else --to;
                 }
-                else --to;
-            }
-            if (to == to_map.begin()) {
-                // increase all to-values equal or higher by 1 (last element)
-                cout << "to->first " << to->first << endl;
-                if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
-                    GSWEdge val = to->second; val.to++; // correct the data ...
-                    vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
-                    pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
-                    if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
-                    cout << "    " << val.to-1 << "->" << val.to << endl;
-                    to_map.erase(to);
+                if (to == to_map.begin()) {
+                    // increase all to-values equal or higher by 1 (last element)
+                    cout << "to->first " << to->first << endl;
+                    if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
+                        GSWEdge val = to->second; val.to++; // correct the data ...
+                        vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
+                        pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
+                        if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
+                        cout << "    " << val.to-1 << "->" << val.to << endl;
+                        to_map.erase(to);
+                    }
                 }
             }
-        }
-        // increase all from-values equal or higher by 1
-        for (edgemap::reverse_iterator from = edgewalk.rbegin(); from != edgewalk.rend(); from++) {
-            if (from->first >= e.to) {
-                int i = from->first;
-                edgewalk[i+1]=edgewalk[i];
-                edgewalk.erase(i);
+            // increase all from-values equal or higher by 1
+            for (edgemap::reverse_iterator from = edgewalk.rbegin(); from != edgewalk.rend(); from++) {
+                if (from->first >= e.to) {
+                    int i = from->first;
+                    edgewalk[i+1]=edgewalk[i];
+                    edgewalk.erase(i);
+                }
             }
         }
     }
@@ -1801,13 +1812,16 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
             nodewalk[e.to] = n;
         }
         else { 
-            if (moved_to_ex) {
+            if (moved_to_ex || to_core_range) {
                 nodewalk[e.to]=n;
+                if (to_in_ex) {                                    
+                    to_nodes_ex.erase(it_ex);
+                }
             }
             else {
                 if (to_in_ex) {                                    // case 2: 'soft'-insertion
                     nodewalk[e.to]=n;
-                    to_nodes_ex.erase(it);                         // (must unremember now-used slot)
+                    to_nodes_ex.erase(it_ex);                      // (must unremember now-used slot)
                 }
                 else {
                     nodewalk.insert(nodewalk.begin()+e.to, n);     // case 3: 'hard'-insertion
