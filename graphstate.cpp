@@ -1390,7 +1390,9 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         // prepare basic structure: copy core nodes and connecting edges from this to s, if s is empty
         if (s->nodewalk.size() == 0) {
             #ifdef DEBUG
-            cout << "Initializing new SW" << endl;
+            if (fm::die) {
+                cout << "Initializing new SW" << endl;
+            }
             #endif
             for (vector<int>::iterator index = core_ids.begin(); index!=core_ids.end(); index++) {
                 edgemap::iterator from = edgewalk.find(*index);
@@ -1420,10 +1422,10 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
                 cout << "-begin-" << endl;
                 cout << this << endl;
                 cout << s << endl;
+                cout << "core: '";
+                each(core_ids) cout << core_ids[i] << " ";
+                cout << "'" << endl;
             }
-            cout << "core: '";
-            each(core_ids) cout << core_ids[i] << " ";
-            cout << "'" << endl;
             #endif
         
             ninsert21.clear();
@@ -1605,8 +1607,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         if (fm::die) {
             cout << this << endl;
             cout << s << endl;
+            cout << "-stack-" << endl;
         }
-        cout << "-stack-" << endl;
         #endif
 
         // stack labels and activities to s
@@ -1621,8 +1623,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         if (fm::die) {
             cout << this << endl;
             cout << s << endl;
+            cout << "-end-" << endl;
         }
-        cout << "-end-" << endl;
         #endif
    
         // calculate one step core ids 
@@ -1715,10 +1717,12 @@ int GSWEdge::stack (GSWEdge e) {
 void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* core_ids, set<int>* u12) {
 
     #ifdef DEBUG
-    cout << "e.to " << e.to << endl;
-    cout << "to-nodes ex: '";
-    each_it(to_nodes_ex, vector<int>::iterator) { cout << *it << " "; }
-    cout << "'" << endl;
+    if (fm::die) {
+        cout << "e.to " << e.to << endl;
+        cout << "to-nodes ex: '";
+        each_it(to_nodes_ex, vector<int>::iterator) { cout << *it << " "; }
+        cout << "'" << endl;
+    }
     #endif
     
     // to-node in existing positions?
@@ -1727,7 +1731,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     if (it_ex!=to_nodes_ex.end()) { 
         to_in_ex=1; 
         #ifdef DEBUG 
-        cout << "to in ex" << endl;
+        if (fm::die) cout << "to in ex" << endl;
         #endif
     }
 
@@ -1736,7 +1740,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     if ((e.to >= *(core_ids->begin())) && (e.to <= *(core_ids->end()-1))) { 
         to_core_range=1; 
         #ifdef DEBUG 
-        cout << "to in core range" << endl; 
+        if (fm::die) cout << "to in core range" << endl; 
         #endif
     }
     if (reorder && find(core_ids->begin(), core_ids->end(), e.to) != core_ids->end()) { cerr << "Error! e.to is a core-id." << endl; exit(1); }
@@ -1763,15 +1767,14 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
             for (edgemap::iterator from = edgewalk.begin(); from != edgewalk.end(); from++) {
                 map<int, GSWEdge>& to_map = from->second;
                 #ifdef DEBUG
-                cout << endl << from->first << " to" << endl;
-                cout << "to_map size: " << to_map.size() << endl;
+                if (fm::die) cout << endl << from->first << " to" << endl << "to_map size: " << to_map.size() << endl;
                 #endif
                 map<int, GSWEdge>::iterator to=to_map.end();
                 to--;
                 for (; to != to_map.begin(); ) {
                     // increase all to-values equal or higher by 1
                     #ifdef DEBUG
-                    cout << "to->first " << to->first << endl;
+                    if (fm::die) cout << "to->first " << to->first << endl;
                     #endif
                     if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                         GSWEdge val = to->second; val.to++; // correct the data ...
@@ -1779,7 +1782,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                         pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
                         if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
                         #ifdef DEBUG
-                        cout << "    " << val.to-1 << "->" << val.to << endl;
+                        if (fm::die) cout << "    " << val.to-1 << "->" << val.to << endl;
                         #endif
                         to_map.erase(to--);
                     }
@@ -1788,7 +1791,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                 if (to == to_map.begin()) {
                     // increase all to-values equal or higher by 1 (last element)
                     #ifdef DEBUG
-                    cout << "to->first " << to->first << endl;
+                    if (fm::die) cout << "to->first " << to->first << endl;
                     #endif
                     if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                         GSWEdge val = to->second; val.to++; // correct the data ...
@@ -1796,7 +1799,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                         pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
                         if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
                         #ifdef DEBUG
-                        cout << "    " << val.to-1 << "->" << val.to << endl;
+                        if (fm::die) cout << "    " << val.to-1 << "->" << val.to << endl;
                         #endif
                         to_map.erase(to);
                     }
