@@ -1361,7 +1361,7 @@ void GraphState::puti ( FILE *f, int i ) {
 
 //! s-sided stack of two features by walking core ids
 //  NOTE: s is intended to 'carry' the growing meta pattern
-int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
+int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
 
     // sanity check: core
     if (core_ids.size()>0) {
@@ -1615,8 +1615,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         // all core id nodes
         // all edges leaving core id nodes
         // this includes edges inside the core, as well as edges leaving the core
-        stack(s, core_ids);
-        s->stack(this, core_ids);
+        //      stack(s, core_ids, add);          //
+        s->stack(this, core_ids, add);
 
 
         #ifdef DEBUG
@@ -1628,7 +1628,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
         #endif
    
         // calculate one step core ids 
-        if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s);
+        if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, add);
 
         each_it(s->nodewalk, nodevector::iterator) {
             if (it->labs.size() == 0) {
@@ -1636,11 +1636,13 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
             }
         }
 
+        /*
         each_it(nodewalk, nodevector::iterator) {
             if (it->labs.size() == 0) {
                 cerr << "Error! Labels left to fill." << endl; exit(1);
             }
         }
+        */
 
         return 0;
     }
@@ -1652,7 +1654,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s) {
 //  all edges leaving core id nodes
 //  includes edges inside the core, as well as edges leaving the core
 //
-int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
+int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
     // sanity check: core ids present in nodewalks
     vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
     if (!(includes(test_ids.begin(),test_ids.end(),core_ids.begin(),core_ids.end()))) {
@@ -1661,7 +1663,7 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
     }
     // nodes clean: do the actual node merging
     each_it(core_ids, vector<int>::iterator) {
-        nodewalk[*it].stack(w->nodewalk[*it]);
+        nodewalk[*it].stack(w->nodewalk[*it], add);
     }
     // edge merging
     each_it(core_ids, vector<int>::iterator) {
@@ -1680,7 +1682,7 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
                     cerr << "Error! Can not stack edgewalks with different 'to'-components." << endl; 
                     exit(1);
                 }
-                to->second.stack(w_to->second);
+                to->second.stack(w_to->second, add);
             }
         }
     }
@@ -1688,26 +1690,30 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
 
 //! stacks a node n
 //
-int GSWNode::stack (GSWNode n) {
+int GSWNode::stack (GSWNode n, bool add) {
     labs.insert(n.labs.begin(), n.labs.end());
-    for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
-        a[it->first] = a[it->first] + it->second;
-    }
-    for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
-        i[it->first] = i[it->first] + it->second;
+    if (add) {
+        for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
+            a[it->first] = a[it->first] + it->second;
+        }
+        for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
+            i[it->first] = i[it->first] + it->second;
+        }
     }
     return 0;
 }
 
 //! stacks an edge e
 //
-int GSWEdge::stack (GSWEdge e) {
+int GSWEdge::stack (GSWEdge e, bool add) {
     labs.insert(e.labs.begin(), e.labs.end());
-    for (map<Tid,int>::iterator it=e.a.begin(); it!=e.a.end(); it++) {
-        a[it->first] = a[it->first] + it->second;
-    }
-    for (map<Tid,int>::iterator it=e.i.begin(); it!=e.i.end(); it++) {
-        i[it->first] = i[it->first] + it->second;
+    if (add) {
+        for (map<Tid,int>::iterator it=e.a.begin(); it!=e.a.end(); it++) {
+            a[it->first] = a[it->first] + it->second;
+        }
+        for (map<Tid,int>::iterator it=e.i.begin(); it!=e.i.end(); it++) {
+            i[it->first] = i[it->first] + it->second;
+        }
     }
     return 0;
 }

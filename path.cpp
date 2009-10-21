@@ -661,88 +661,54 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
   GSWalk* siblingwalk = new GSWalk();
   vector<set<Tid> >siblingoccurrences;
 
+  vector<int> core_ids; 
+  for (int j=0; j<parent_size; j++) core_ids.push_back(j);
+
   for ( unsigned int i = 0; i < legs.size (); i++ ) {
     PathTuple &tuple = legs[i]->tuple;
     if ( tuple.depth != nodelabels.size () - 1 ) {
 
+    // PHASE 2: GROW TREE
+    if ( legs[i]->tuple.depth != 0 ) {
+      if ( ( totalsymmetry || legs[i]->tuple.depth <= edgelabels.size () / 2 ) &&
+      ( legs[i]->tuple.depth != 1 || legs[i]->tuple.edgelabel >= edgelabels[0] ) &&
+      ( legs[i]->tuple.depth != nodelabels.size () - 2 || legs[i]->tuple.edgelabel >= edgelabels.back () ) &&
+      fm::type > 1 ) {
 
-      // PHASE 2: GROW TREE
-      if ( legs[i]->tuple.depth != 0 ) {
-        if ( ( totalsymmetry || legs[i]->tuple.depth <= edgelabels.size () / 2 ) &&
- 	      ( legs[i]->tuple.depth != 1 || legs[i]->tuple.edgelabel >= edgelabels[0] ) &&
-	      ( legs[i]->tuple.depth != nodelabels.size () - 2 || legs[i]->tuple.edgelabel >= edgelabels.back () ) &&
-	        fm::type > 1 ) {
-
-          // single view: this individual pattern
+          // new current pattern
           GSWalk* gsw = new GSWalk();
-          int gsw_size;
           GSWalk* topdown = NULL;
-          bool stop_criterium=0;
-          vector<set<Tid> > thisoccurrences;
-          vector<int> core_ids; 
+
+          int gsw_size=0;
+          bool stop_criterium=1;
 
           if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
+
           fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
+          #ifdef DEBUG
+          fm::graphstate->print(legs[i]->occurrences.frequency);
+          #endif
 
-          if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
-               #ifndef DEBUG
-               if (!fm::do_last) {
-               #endif
-                   if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
-                   else fm::graphstate->print(legs[i]->occurrences.frequency);
-               #ifndef DEBUG
-               }
-               #endif
-
-               // print to graphstate walk, checks are needed
-               if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
-                   thisoccurrences.resize(1);
-                   map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
-                   map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); thisoccurrences.back().insert(*it); }
-                   vector<set<Tid> >::iterator th_it = thisoccurrences.end(); th_it--;
-
-                   if (siblingoccurrences.size()) {
-                       set<Tid> si; set<Tid> sdi; set<Tid> sdim1;
-                       vector<set<Tid> >::iterator so_it = siblingoccurrences.end(); so_it--;
-                        
-
-                       set_intersection(so_it->begin(),so_it->end(), (th_it)->begin(), (th_it)->end(), std::inserter(si, si.end()));
-                       set_difference(so_it->begin(),so_it->end(), si.begin(), si.end(), std::inserter(sdi, sdi.end()));
-                       set_difference((th_it)->begin(),(th_it)->end(), si.begin(), si.end(), std::inserter(sdim1, sdim1.end()));
-
-                       if (sdi.size()+sdim1.size()>si.size()) stop_criterium=1;
-                   }
-                   fm::graphstate->print(gsw, weightmap_a, weightmap_i);
-                   gsw_size=gsw->nodewalk.size();
-                   // get core ids
-                   for (int j=0; j<parent_size; j++) core_ids.push_back(j);
-               }
+          if (fm::chisq->active) {
+              map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); }
+              map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); }
+              fm::graphstate->print(gsw, weightmap_a, weightmap_i);
+              gsw_size=gsw->nodewalk.size();
+              if (fm::chisq->p >= fm::chisq->sig) {
+                  stop_criterium=0;
+              }
           }
 
-          float cmax = maxi ( maxi ( fm::chisq->sig, max.first ), fm::chisq->p );
-          if ( ( !fm::do_pruning || 
-               (
-                 (  !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) || 
-                 (   fm::adjust_ub && (fm::chisq->u >= cmax) )
-               )
-             ) &&
-             (
-                fm::refine_singles || (legs[i]->occurrences.frequency>1)
-             )
-          ){
+          if ( ( !fm::do_pruning ||  (  !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) ) &&
+               (  fm::refine_singles || (legs[i]->occurrences.frequency>1) )
+             ) {
               PatternTree tree ( *this, i );
-              if (!fm::do_last && fm::most_specific_trees_only && fm::do_output && !fm::do_backbone && tree.legs.size() == 0) {
-                   if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
-                   else fm::graphstate->print(legs[i]->occurrences.frequency);
-              }
-              // expand using individual pattern as parent
               if (max.first<fm::chisq->p) { fm::updated = true; topdown = tree.expand ( pair<float, string>(fm::chisq->p, fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw_size); }
               else topdown = tree.expand (max, gsw_size);
               // merge to siblingwalk
               if (topdown != NULL) {
                    if (topdown->edgewalk.size()) {
-                        // get core ids
-                        vector<int> core_ids; for (int i=0; i<parent_size; i++) core_ids.push_back(i);
+
                         #ifdef DEBUG
                         if (fm::die) {
                             cout << "TOPDOWN BEGIN " << core_ids.size() << endl;
@@ -751,7 +717,22 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                             cout << siblingwalk << endl;
                         }
                         #endif
-                        topdown->conflict_resolution(core_ids, siblingwalk); 
+
+                        if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+                        // STOP: OUTPUT TOPDOWN
+                        if (stop_criterium) {
+                            #ifdef DEBUG
+                            cout << "STOP CRITERIUM at POS " << siblingoccurrences.size() << " HOPS " << fm::last_hops << endl;
+                            #endif
+                            cout << topdown << endl; 
+                            fm::last_hops=0;
+                        }
+                        // ELSE: MERGE TO SIBLINGWALK
+                        else {
+                            topdown->conflict_resolution(core_ids, siblingwalk, 1); 
+                        }
+                        if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+
                         #ifdef DEBUG
                         if (fm::die) {
                             cout << "TOPDOWN END " << core_ids.size() << endl;
@@ -763,46 +744,26 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                    }
               }
 
-              //#ifdef DEBUG
-              if (stop_criterium) cout << "STOP CRITERIUM at POS " << siblingoccurrences.size() << " HOPS " << fm::last_hops << endl;
-              // #endif
-              if (stop_criterium) { 
-                  cout << siblingwalk << endl;
-                  delete siblingwalk;
-                  siblingwalk = new GSWalk();
-                  siblingoccurrences.clear();
-                  fm::last_hops=0;
-              }
-              if (thisoccurrences.size()) siblingoccurrences.push_back(thisoccurrences.back());
-              // merge to siblingwalk
-              gsw->conflict_resolution(core_ids, siblingwalk);
-              fm::last_hops++;
-
-              delete topdown;
-          }
-          else {
-              if (!fm::do_last && fm::do_backbone && fm::updated) { 
-                  if (fm::do_output) {
-                      if (!fm::console_out) (*fm::result) << max.second;
-                      else  cout << max.second;
-                  }
-                  fm::updated=false;
-              }
+              // !STOP: MERGE TO SIBLINGWALK
+              if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available. " << gsw->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+              if (!stop_criterium) { gsw->conflict_resolution(core_ids, siblingwalk, 1); fm::last_hops++; }
+              if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available. " << gsw->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
           }
 
 	      fm::graphstate->deleteNode ();
-          // delete individual pattern
+          delete topdown;
           delete gsw;
         }
+        #ifdef DEBUG  
+        if (!legs.size()) cout << fm::graphstate->sep() << endl;
+        #endif
       }
     }
   }
 
   // delete horizontal view
   delete siblingwalk;
-
   fm::updated=uptmp;
-    
   fm::statistics->patternsize--;
 
 
