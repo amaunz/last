@@ -685,10 +685,14 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
           fm::graphstate->insertNode ( legs[i]->tuple.connectingnode, legs[i]->tuple.edgelabel, legs[i]->occurrences.maxdegree );
 
           if (fm::do_output && !fm::most_specific_trees_only && !fm::do_backbone) {
+               #ifndef DEBUG
                if (!fm::do_last) {
+               #endif
                    if (!fm::console_out) (*fm::result) << fm::graphstate->to_s(legs[i]->occurrences.frequency);
                    else fm::graphstate->print(legs[i]->occurrences.frequency);
+               #ifndef DEBUG
                }
+               #endif
 
                // print to graphstate walk, checks are needed
                if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
@@ -769,7 +773,7 @@ void Path::expand2 (pair<float,string> max, int parent_size) {
                   siblingoccurrences.clear();
                   fm::last_hops=0;
               }
-              siblingoccurrences.push_back(thisoccurrences.back());
+              if (thisoccurrences.size()) siblingoccurrences.push_back(thisoccurrences.back());
               // merge to siblingwalk
               gsw->conflict_resolution(core_ids, siblingwalk);
               fm::last_hops++;
