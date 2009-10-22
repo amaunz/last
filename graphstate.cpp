@@ -1863,3 +1863,17 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
         nodewalk[e.to] = n;
     }
 }
+
+void GSWalk::svd () {
+   gsl_matrix* A = gsl_matrix_calloc (edgewalk.size(), edgewalk.size());
+   gsl_matrix* U = gsl_matrix_calloc (edgewalk.size(), edgewalk.size());
+   gsl_vector* S = gsl_vector_calloc (edgewalk.size());
+   gsl_matrix* V = gsl_matrix_calloc (edgewalk.size(), edgewalk.size());
+
+
+
+   gsl_matrix_free(A);
+   gsl_matrix_free(U);
+   gsl_vector_free(S);
+   gsl_matrix_free(V);
+}

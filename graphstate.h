@@ -25,6 +25,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <gsl/gsl_matrix.h>
+
 #include "misc.h"
 #include "database.h"
 #include "closeleg.h"
@@ -168,6 +170,7 @@ class GSWalk {
       int stack (GSWalk* single, vector<int> core_ids, bool add);
 
       void add_edge(int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* core_ids, set<int>* u12);
+      void svd();
       void up_edge(int i);
       static bool lt_to_map (pair<int, GSWEdge> a, pair<int, GSWEdge> b) {
         if (a.first < b.first) return 1;
