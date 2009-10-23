@@ -1595,6 +1595,24 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
 
             core_ids_size=core_ids.size();
 
+            each_it(edgewalk, edgemap::iterator) {
+                for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                    if (it2->first >= nodewalk.size()) {
+                        cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
+                        cout << this << endl;
+                    }
+                }
+            }
+            each_it(s->edgewalk, edgemap::iterator) {
+                for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                    if (it2->first >= s->nodewalk.size()) {
+                        cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
+                        cout << s << endl;
+                    }
+                }
+            }
+
+
         } while (einsert21.size() || einsert12.size()); // Finished all edges for core ids
         #ifdef DEBUG
         if (fm::die) {
@@ -1603,6 +1621,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
         #endif
        
 
+
         #ifdef DEBUG
         if (fm::die) {
             cout << this << endl;
@@ -1610,6 +1629,25 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
             cout << "-stack-" << endl;
         }
         #endif
+
+        each_it(edgewalk, edgemap::iterator) {
+            for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                if (it2->first >= nodewalk.size()) {
+                    cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
+                    cout << this << endl;
+                    exit(1);
+                }
+            }
+        }
+        each_it(s->edgewalk, edgemap::iterator) {
+            for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                if (it2->first >= s->nodewalk.size()) {
+                    cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
+                    cout << s << endl;
+                    exit(1);
+                }
+            }
+        }
 
         // stack labels and activities to s
         // all core id nodes
@@ -1784,7 +1822,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                     #endif
                     if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                         GSWEdge val = to->second; val.to++; // correct the data ...
-                        vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
+                        //vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; cout << "Moved to ex" << endl; } // ... recognize move into existing nodes ...
                         pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
                         if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
                         #ifdef DEBUG
@@ -1801,7 +1839,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                     #endif
                     if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                         GSWEdge val = to->second; val.to++; // correct the data ...
-                        vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; } // ... recognize move into existing nodes ...
+                        //vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; cout << "Moved to ex" << endl; } // ... recognize move into existing nodes ...
                         pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
                         if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
                         #ifdef DEBUG
