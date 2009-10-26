@@ -1375,6 +1375,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
         set<int> d12; // the mutex edges for j (neither core nor node conflict edges)
         set<int> d21; // 
         set<int> u12; // the incremental union set over both d12 and d21 and j (includes mutex and node conflict edges)
+        set<int> index_revisit; // index nodes to be revisited, due to out-of-bound indices in to-nodes 
 
         map<int, map<int, GSWNode> > ninsert21; 
         map<int, map<int, GSWEdge> > einsert21; 
@@ -1433,6 +1434,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
             ninsert12.clear();
             einsert12.clear();
             c12_inc.clear();
+            index_revisit.clear();
 
             #ifdef DEBUG
             if (fm::die) {
@@ -1489,52 +1491,62 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
         
                 // single edges
                 each_it(d21, set<int>::iterator) {
-                    #ifdef DEBUG
-                    if (fm::die) {
-                        map<int, GSWEdge>& w2j = e2->second;
-                        cout << "D21: " << j << "->" << w2j.find(*it)->first;
-                        cout << " < "; 
-                        set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
-                        for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                            cout << *it2 << " ";
+                    if (*it <= nodewalk.size()) { // only insert in-bound edges
+                        #ifdef DEBUG
+                        if (fm::die) {
+                            map<int, GSWEdge>& w2j = e2->second;
+                            cout << "D21: " << j << "->" << w2j.find(*it)->first;
+                            cout << " < "; 
+                            set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
+                            for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                                cout << *it2 << " ";
+                            }
+                            cout << ">" << endl;
                         }
-                        cout << ">" << endl;
+                        #endif
+                        map<Tid, int> weightmap_a; 
+                        map<Tid, int> weightmap_i; 
+                        set<InputNodeLabel> inl;
+                        set<InputEdgeLabel> iel;
+                        GSWNode n = { inl, weightmap_a, weightmap_i };
+                        GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
+                        ninsert21[*it][j]=n;
+                        einsert21[*it][j]=e;
                     }
-                    #endif
-                    map<Tid, int> weightmap_a; 
-                    map<Tid, int> weightmap_i; 
-                    set<InputNodeLabel> inl;
-                    set<InputEdgeLabel> iel;
-                    GSWNode n = { inl, weightmap_a, weightmap_i };
-                    GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
-                    ninsert21[*it][j]=n;
-                    einsert21[*it][j]=e;
+                    else { // remember index for next round
+                        index_revisit.insert(index);
+                    }
                 }
 
                 // nothing inserted, so no recalculation of d12 necessary
 
                 // single edges
                 each_it(d12, set<int>::iterator) {
-                    #ifdef DEBUG
-                    if (fm::die) {
-                        map<int, GSWEdge>& w1j = e1->second;
-                        cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
-                        cout << " < ";
-                        set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
-                        for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                            cout << *it2 << " ";
+                    if (*it <= s->nodewalk.size()) {
+                        #ifdef DEBUG
+                        if (fm::die) {
+                            map<int, GSWEdge>& w1j = e1->second;
+                            cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
+                            cout << " < ";
+                            set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
+                            for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                                cout << *it2 << " ";
+                            }
+                            cout << ">" << endl;
                         }
-                        cout << ">" << endl;
+                        #endif
+                        map<Tid, int> weightmap_a; 
+                        map<Tid, int> weightmap_i; 
+                        set<InputNodeLabel> inl;
+                        set<InputEdgeLabel> iel;
+                        GSWNode n = { inl, weightmap_a, weightmap_i };
+                        GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
+                        ninsert12[*it][j]=n;
+                        einsert12[*it][j]=e;
                     }
-                    #endif
-                    map<Tid, int> weightmap_a; 
-                    map<Tid, int> weightmap_i; 
-                    set<InputNodeLabel> inl;
-                    set<InputEdgeLabel> iel;
-                    GSWNode n = { inl, weightmap_a, weightmap_i };
-                    GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
-                    ninsert12[*it][j]=n;
-                    einsert12[*it][j]=e;
+                    else {
+                        index_revisit.insert(index);
+                    }
                 }
                 
             } // end for core ids
@@ -1556,31 +1568,42 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
                 if (it21 != einsert21.end()) {
                     if ( (it12 == einsert12.end()) || (it21->first <= it12->first) ) { // direction 21 first
                         if (it21->second.size()>1) { cerr << "Error! More than one edge to the same node (21)." << endl; exit(1); }
-                        add_edge(
-                            it21->second.begin()->first, 
-                            it21->second.begin()->second, 
-                            ninsert21[it21->first][it21->second.begin()->first],
-                            1,
-                            &core_ids,
-                            &u12
-                        );
+                        // to node is out of range: re-insert index for next round
+                        if (it21->first > nodewalk.size()) {
+                            cerr << "Error! 21: to-node '" << it21->first << "' is out of bound." << endl; exit(1);
+                        }
+                        else {
+                            add_edge(
+                                it21->second.begin()->first, 
+                                it21->second.begin()->second, 
+                                ninsert21[it21->first][it21->second.begin()->first],
+                                1,
+                                &core_ids,
+                                &u12
+                            );
+                            u12.insert(it21->first);
+                        }
                         insertion_done = 1;
-                        u12.insert(it21->first);
                     }
                 }
                 if (it12 != einsert12.end()) {
                     if ( (it21 == einsert21.end()) ||  (it12->first < it21->first) ) {
                         if (it12->second.size()>1) { cerr << "Error! More than one edge to the same node (12)." << endl; exit(1); }
-                        s->add_edge(
-                            it12->second.begin()->first, 
-                            it12->second.begin()->second, 
-                            ninsert12[it12->first][it12->second.begin()->first],
-                            1,
-                            &core_ids,
-                            &u12
-                        );
+                        if (it12->first > s->nodewalk.size()) {
+                            cerr << "Error! 12: to-node '" << it12->first << "' is out of bound." << endl; exit(1);
+                        }
+                        else {
+                            s->add_edge(
+                                it12->second.begin()->first, 
+                                it12->second.begin()->second, 
+                                ninsert12[it12->first][it12->second.begin()->first],
+                                1,
+                                &core_ids,
+                                &u12
+                            );
+                            u12.insert(it12->first);
+                        }
                         insertion_done = 1;
-                        u12.insert(it12->first);
                     }
                 }
                 if (!insertion_done) { cerr << "Error! No insertion done. " << einsert21.size() << " " << einsert12.size() << endl; exit(1); } 
@@ -1666,6 +1689,19 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
         #endif
    
         // calculate one step core ids 
+        #ifdef DEBUG
+        if (index_revisit.size()) cout << "Revisiting '";
+        #endif
+        each_it(index_revisit, set<int>::iterator) { 
+            #ifdef DEBUG
+            cout << *it  << " ";
+            #endif
+            u12.insert(*it); 
+        }
+         #ifdef DEBUG
+        if (index_revisit.size()) cout << "'." << endl;
+        #endif
+
         if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, add);
 
         each_it(s->nodewalk, nodevector::iterator) {
@@ -1696,7 +1732,7 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
     // sanity check: core ids present in nodewalks
     vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
     if (!(includes(test_ids.begin(),test_ids.end(),core_ids.begin(),core_ids.end()))) {
-        cerr << "Error! More core ids than nodes." << endl; 
+        cerr << "Error! Set-more core ids than nodes." << endl; 
         exit(1);
     }
     // nodes clean: do the actual node merging
@@ -1709,18 +1745,22 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
         if (from!=edgewalk.end())   {
             edgemap::iterator w_from=w->edgewalk.find(from->first);
             if (w_from == w->edgewalk.end()) {
-                cerr << "Error! Can not stack edgewalks with different 'from'-components." << endl; 
-                exit(1);
+                #ifdef DEBUG
+                cout << "Different 'from'-components (" << from->first << ")." << endl; 
+                #endif
             }
-            map<int, GSWEdge>& e = from->second;
-            map<int, GSWEdge>& se = w_from->second;
-            for (map<int, GSWEdge>::iterator to=e.begin(); to!=e.end(); to++) {
-                map<int, GSWEdge>::iterator w_to=se.find(to->first);
-                if (w_to == se.end()) {
-                    cerr << "Error! Can not stack edgewalks with different 'to'-components." << endl; 
-                    exit(1);
+            else {
+                map<int, GSWEdge>& e = from->second;
+                map<int, GSWEdge>& se = w_from->second;
+                for (map<int, GSWEdge>::iterator to=e.begin(); to!=e.end(); to++) {
+                    map<int, GSWEdge>::iterator w_to=se.find(to->first);
+                    if (w_to == se.end()) {
+                        #ifdef DEBUG
+                        cout << "Different 'to'-component (" << to->first << ")." << endl;
+                        #endif
+                    }
+                    else to->second.stack(w_to->second, add);
                 }
-                to->second.stack(w_to->second, add);
             }
         }
     }
@@ -1763,20 +1803,13 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     #ifdef DEBUG
     if (fm::die) {
         cout << "e.to " << e.to << endl;
-        cout << "to-nodes ex: '";
-        each_it(to_nodes_ex, vector<int>::iterator) { cout << *it << " "; }
-        cout << "'" << endl;
     }
     #endif
     
-    // to-node in existing positions?
-    bool to_in_ex=0;
+    // DEFUNCT: to-node in existing positions?
     vector<int>::iterator it_ex = find(to_nodes_ex.begin(), to_nodes_ex.end(), e.to);
     if (it_ex!=to_nodes_ex.end()) { 
-        to_in_ex=1; 
-        #ifdef DEBUG 
-        if (fm::die) cout << "to in ex" << endl;
-        #endif
+        cerr << "Error! To in ex." << endl; exit(1);
     }
 
     // to-core-range?
@@ -1784,13 +1817,12 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     if ((e.to >= *(core_ids->begin())) && (e.to <= *(core_ids->end()-1))) { 
         to_core_range=1; 
         #ifdef DEBUG 
-        if (fm::die) cout << "to in core range" << endl; 
+        if (fm::die) cout << "to in core range (" << e.to << ")." << endl; 
         #endif
     }
     if (reorder && find(core_ids->begin(), core_ids->end(), e.to) != core_ids->end()) { cerr << "Error! e.to is a core-id." << endl; exit(1); }
-    bool moved_to_ex=0;
 
-    if (reorder && !to_in_ex) { // 'hard' insertion: reorder edges by moving 1 up
+    if (reorder) { // 'hard' insertion: reorder edges by moving 1 up
 
         if (to_core_range) {
             // find current edge
@@ -1822,7 +1854,6 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                     #endif
                     if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                         GSWEdge val = to->second; val.to++; // correct the data ...
-                        //vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; cout << "Moved to ex" << endl; } // ... recognize move into existing nodes ...
                         pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
                         if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
                         #ifdef DEBUG
@@ -1839,7 +1870,6 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
                     #endif
                     if ((to->first >= e.to) && ((find(core_ids->begin(), core_ids->end(), to->first) == core_ids->end()) || to_core_range)) {
                         GSWEdge val = to->second; val.to++; // correct the data ...
-                        //vector<int>::iterator ex=find(to_nodes_ex.begin(), to_nodes_ex.end(), val.to); if (ex != to_nodes_ex.end()) { to_nodes_ex.erase(ex); moved_to_ex=1; cout << "Moved to ex" << endl; } // ... recognize move into existing nodes ...
                         pair<map<int, GSWEdge>::reverse_iterator, bool> p = to_map.insert(make_pair(val.to,val)); // ... and insert new value
                         if (!p.second) { cerr << "Error! Replaced a value while moving down. This should never happen." << endl; exit(1); }
                         #ifdef DEBUG
@@ -1866,33 +1896,19 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
 
     // insert to into nodewalk
     if (reorder) {                                                // called for non-empty s
-        if (e.to >= nodewalk.size()) {                            // case 1: 'off'-insertion
-            for (int i=nodewalk.size(); i < e.to; ++i) {
-                to_nodes_ex.push_back(i);                         // (must remember empty slots just created)
-            }
+        if (e.to == nodewalk.size()) {                            // case 1: 'off'-insertion
             nodewalk.resize(e.to+1);
             nodewalk[e.to] = n;
         }
+        else if (e.to > nodewalk.size()) { 
+            cerr << "Error! e.to out of bound." << endl; exit(1);
+        }
         else { 
-            if (moved_to_ex || to_core_range) {
+            if (to_core_range) {
                 nodewalk[e.to]=n;
-                if (to_in_ex) {                                    
-                    to_nodes_ex.erase(it_ex);
-                }
             }
             else {
-                if (to_in_ex) {                                    // case 2: 'soft'-insertion
-                    nodewalk[e.to]=n;
-                    to_nodes_ex.erase(it_ex);                      // (must unremember now-used slot)
-                }
-                else {
-                    nodewalk.insert(nodewalk.begin()+e.to, n);     // case 3: 'hard'-insertion
-                    each_it(to_nodes_ex, vector<int>::iterator) {
-                        if ((*it)>=e.to) { 
-                            (*it)=(*it+1);                         // (must update some slots)
-                        }
-                    }
-                }
+                nodewalk.insert(nodewalk.begin()+e.to, n);     // case 3: 'hard'-insertion
             }
         }
     }

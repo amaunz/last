@@ -526,8 +526,8 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     fm::do_yaml=true;
     fm::gsp_out=false;
     string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
-    //if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
-    //fm::die=1;
+    if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
+    fm::die=1;
     //fm::do_yaml=false;
     //fm::gsp_out=true;
     #endif
@@ -564,7 +564,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               }
               #endif
 
-              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 2.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
               // STOP: OUTPUT TOPDOWN
               if (stop_criterium) {
                   #ifdef DEBUG
@@ -581,7 +581,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               else {
                   topdown->conflict_resolution(core_ids, siblingwalk, 1);  // BUGTRACE 1
               }
-              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 2.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; each_it(topdown->to_nodes_ex, vector<int>::iterator) cout << *it << " "; cout << endl;  exit(1); }
 
               #ifdef DEBUG
               if (fm::die) {
@@ -595,9 +595,9 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     }
 
     // !STOP: MERGE TO SIBLINGWALK
-    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 2.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
     if (!stop_criterium) { gsw->conflict_resolution(core_ids, siblingwalk, 1); legcnt++; fm::last_hops++; }
-    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 2.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
     fm::graphstate->deleteNode ();
 
@@ -668,7 +668,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               }
               #endif
 
-              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 3.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
               // STOP: OUTPUT TOPDOWN
               if (stop_criterium) {
                   #ifdef DEBUG
@@ -685,7 +685,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               else {
                   topdown->conflict_resolution(core_ids, siblingwalk, 1); 
               }
-              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+              if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 3.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
               #ifdef DEBUG
               if (fm::die) {
@@ -699,9 +699,9 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     }
 
     // !STOP: MERGE TO SIBLINGWALK
-    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 3.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
     if (!stop_criterium) { gsw->conflict_resolution(core_ids, siblingwalk, 1); legcnt++; fm::last_hops++; }
-    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+    if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 3.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
     
     fm::graphstate->deleteNode ();
 
@@ -774,7 +774,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
                     }
                     #endif
 
-                    if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+                    if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 4.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
                     // STOP: OUTPUT TOPDOWN
                     if (stop_criterium) {
                         #ifdef DEBUG
@@ -791,7 +791,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
                     else {
                         topdown->conflict_resolution(core_ids, siblingwalk, 1); 
                     }
-                    if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+                    if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 4.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
                     #ifdef DEBUG
                     if (fm::die) {
@@ -805,9 +805,9 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           }
 
           // !STOP: MERGE TO SIBLINGWALK
-          if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+          if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 4.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
           if (!stop_criterium) { gsw->conflict_resolution(core_ids, siblingwalk, 1); legcnt++; fm::last_hops++; }
-          if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+          if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 4.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
 	      fm::graphstate->deleteNode ();
           delete topdown;
@@ -895,7 +895,7 @@ void Path::expand () {
                 }
                 #endif
 
-                if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+                if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 1.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
                 // STOP: OUTPUT TOPDOWN
                 if (stop_criterium) {
                     #ifdef DEBUG
@@ -912,7 +912,7 @@ void Path::expand () {
                 else {
                     topdown->conflict_resolution(core_ids, siblingwalk, 1); 
                 }
-                if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
+                if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 1.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
                 #ifdef DEBUG
                 if (fm::die) {
@@ -926,9 +926,9 @@ void Path::expand () {
       }
 
       // !STOP: MERGE TO SIBLINGWALK
-      if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+      if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 1.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
       if (!stop_criterium) { gsw->conflict_resolution(core_ids, siblingwalk, 1); legcnt++; fm::last_hops++; }
-      if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
+      if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 1.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
       fm::graphstate->deleteNode ();
 
