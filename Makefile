@@ -19,7 +19,7 @@
 
 
 # ADJUST COMPILER PATH TO OPENBABEL INCLUDE FILES (1st line Linux, 2nd line Windows):
-INCLUDE_OB    = -I/usr/local/include/openbabel-2.0
+INCLUDE_OB    = -I/usr/local/include/openbabel-2.0 -I/usr/include/openbabel-2.0
 INCLUDE_OB   += -I/home/openbabel-2.2.1/include
 # ADJUST COMPILER PATH TO GSL INCLUDE FILES (1st line Linux, 2nd line Windows):
 INCLUDE_GSL   = -I/usr/include
@@ -58,7 +58,7 @@ all: $(LIB1)
 $(LIB1): $(OBJ)
 	$(CC) $(LDFLAGS) $(LIBS) -shared -o $@ $^
 else                     # assume GNU/Linux
-CXXFLAGS      = -g $(INCLUDE) -fPIC -DDEBUG
+CXXFLAGS      = -g $(INCLUDE) -fPIC
 LIBS_LIB2     = -lopenbabel -lgsl
 LIBS          = $(LIBS_LIB2) -ldl -lm -lgslcblas
 LIB1          = lib$(NAME).so

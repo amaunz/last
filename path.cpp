@@ -756,7 +756,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           fm::gsp_out=false;
           string s = fm::graphstate->to_s(legs[i]->occurrences.frequency);
           bool diehard=0;
-          if (s.find("C-C(-O-C-N-O)(=C-C)")!=string::npos) { fm::die=1; diehard=1; }
+          //if (s.find("C-C(-O-C-N-O)(=C-C)")!=string::npos) { fm::die=1; diehard=1; }
           #endif
 
           if (fm::chisq->active) {
