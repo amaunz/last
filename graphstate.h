@@ -131,7 +131,7 @@ struct GSWNode {
     set<InputNodeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
-    int stack(GSWNode n, bool add);
+    int stack(GSWNode n);
     friend ostream& operator<< (ostream &out, GSWNode* n);
 };
 
@@ -144,7 +144,7 @@ struct GSWEdge {
     set<InputEdgeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
-    int stack(GSWEdge e, bool add);
+    int stack(GSWEdge e);
     static bool lt_to (GSWEdge& e1, GSWEdge& e2){
         if (e1.to < e2.to) return 1;
         return 0;
@@ -166,8 +166,8 @@ class GSWalk {
       edgemap temp_edgewalk;
       vector<int> to_nodes_ex; // nodes that were inserted due to high IDs - must be overwritten
 
-      int conflict_resolution (vector<int> core_ids, GSWalk* s, bool add);
-      int stack (GSWalk* single, vector<int> core_ids, bool add);
+      int conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction);
+      int stack (GSWalk* single, vector<int> core_ids);
 
       void add_edge(int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* core_ids, set<int>* u12);
       void svd();

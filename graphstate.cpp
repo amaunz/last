@@ -1361,7 +1361,8 @@ void GraphState::puti ( FILE *f, int i ) {
 
 //! s-sided stack of two features by walking core ids
 //  NOTE: s is intended to 'carry' the growing meta pattern
-int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
+//  direction 0: s takes precedence
+int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction) {
 
     // sanity check: core
     if (core_ids.size()>0) {
@@ -1420,7 +1421,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
 
             #ifdef DEBUG
             if (fm::die) {
-                cout << "-begin-" << endl;
+                cout << "-CR begin-" << endl;
                 cout << this << endl;
                 cout << s << endl;
                 cout << "core: '";
@@ -1445,8 +1446,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
             #endif
 
             // Gather candidate edges for all core ids!
-            int core_ids_size = core_ids.size();
-            for (int index = 0; index<core_ids_size; index++) {
+            for (int index = 0; index<core_ids.size(); index++) {
                 int j = core_ids[index];
                 d1.clear();  
                 d2.clear();
@@ -1514,7 +1514,10 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
                         einsert21[*it][j]=e;
                     }
                     else { // remember index for next round
-                        index_revisit.insert(index);
+                        #ifdef DEBUG
+                        if (fm::die) cout << "Node-to-revisit: " << j << endl;
+                        #endif
+                        index_revisit.insert(j);
                     }
                 }
 
@@ -1545,13 +1548,18 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
                         einsert12[*it][j]=e;
                     }
                     else {
-                        index_revisit.insert(index);
+                        #ifdef DEBUG
+                        if (fm::die) cout << "Node-to-revisit: " << j << endl;
+                        #endif
+                        index_revisit.insert(j);
                     }
                 }
                 
             } // end for core ids
 
             
+
+
             map<int, map<int, GSWEdge> >::iterator it21 = einsert21.begin();
             map<int, map<int, GSWEdge> >::iterator it12 = einsert12.begin();
             // Insert lowest conflict edge!
@@ -1566,7 +1574,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
             if ( it21 != einsert21.end() || it12 != einsert12.end() ) {
                 bool insertion_done = 0;
                 if (it21 != einsert21.end()) {
-                    if ( (it12 == einsert12.end()) || (it21->first <= it12->first) ) { // direction 21 first
+                    // equal: direction should be 0 (siblingwalk dominance), so we merge from left to right and from top to down (in this order)
+                    if ( (it12 == einsert12.end()) || (it21->first < it12->first) || (!direction && (it21->first == it12->first)) ) { 
                         if (it21->second.size()>1) { cerr << "Error! More than one edge to the same node (21)." << endl; exit(1); }
                         // to node is out of range: re-insert index for next round
                         if (it21->first > nodewalk.size()) {
@@ -1587,7 +1596,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
                     }
                 }
                 if (it12 != einsert12.end()) {
-                    if ( (it21 == einsert21.end()) ||  (it12->first < it21->first) ) {
+                    if ( (it21 == einsert21.end()) ||  (it12->first < it21->first) || (direction && (it21->first == it12->first)) ) {
                         if (it12->second.size()>1) { cerr << "Error! More than one edge to the same node (12)." << endl; exit(1); }
                         if (it12->first > s->nodewalk.size()) {
                             cerr << "Error! 12: to-node '" << it12->first << "' is out of bound." << endl; exit(1);
@@ -1615,8 +1624,6 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
                 }
             }
             #endif
-
-            core_ids_size=core_ids.size();
 
             each_it(edgewalk, edgemap::iterator) {
                 for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
@@ -1647,8 +1654,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
 
         #ifdef DEBUG
         if (fm::die) {
-            cout << this << endl;
-            cout << s << endl;
+            //cout << this << endl;
+            //cout << s << endl;
             cout << "-stack-" << endl;
         }
         #endif
@@ -1676,33 +1683,32 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
         // all core id nodes
         // all edges leaving core id nodes
         // this includes edges inside the core, as well as edges leaving the core
-        //      stack(s, core_ids, add);          //
-        s->stack(this, core_ids, add);
+        s->stack(this, core_ids);
 
 
         #ifdef DEBUG
         if (fm::die) {
             cout << this << endl;
             cout << s << endl;
-            cout << "-end-" << endl;
+            cout << "-CR end-" << endl;
         }
         #endif
    
         // calculate one step core ids 
         #ifdef DEBUG
-        if (index_revisit.size()) cout << "Revisiting '";
+        if (fm::die) if (index_revisit.size()) cout << "Revisiting '";
         #endif
         each_it(index_revisit, set<int>::iterator) { 
             #ifdef DEBUG
-            cout << *it  << " ";
+            if (fm::die) cout << *it  << " ";
             #endif
             u12.insert(*it); 
         }
          #ifdef DEBUG
-        if (index_revisit.size()) cout << "'." << endl;
+        if (fm::die) if (index_revisit.size()) cout << "'." << endl;
         #endif
 
-        if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, add);
+        if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, direction);
 
         each_it(s->nodewalk, nodevector::iterator) {
             if (it->labs.size() == 0) {
@@ -1728,7 +1734,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add) {
 //  all edges leaving core id nodes
 //  includes edges inside the core, as well as edges leaving the core
 //
-int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
+int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
     // sanity check: core ids present in nodewalks
     vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
     if (!(includes(test_ids.begin(),test_ids.end(),core_ids.begin(),core_ids.end()))) {
@@ -1737,7 +1743,7 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
     }
     // nodes clean: do the actual node merging
     each_it(core_ids, vector<int>::iterator) {
-        nodewalk[*it].stack(w->nodewalk[*it], add);
+        nodewalk[*it].stack(w->nodewalk[*it]);
     }
     // edge merging
     each_it(core_ids, vector<int>::iterator) {
@@ -1746,7 +1752,7 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
             edgemap::iterator w_from=w->edgewalk.find(from->first);
             if (w_from == w->edgewalk.end()) {
                 #ifdef DEBUG
-                cout << "Different 'from'-components (" << from->first << ")." << endl; 
+                if (fm::die) cout << "Different 'from'-components (" << from->first << ")." << endl; 
                 #endif
             }
             else {
@@ -1756,10 +1762,10 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
                     map<int, GSWEdge>::iterator w_to=se.find(to->first);
                     if (w_to == se.end()) {
                         #ifdef DEBUG
-                        cout << "Different 'to'-component (" << to->first << ")." << endl;
+                        if (fm::die) cout << "Different 'to'-component (" << to->first << ")." << endl;
                         #endif
                     }
-                    else to->second.stack(w_to->second, add);
+                    else to->second.stack(w_to->second);
                 }
             }
         }
@@ -1768,30 +1774,26 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids, bool add) {
 
 //! stacks a node n
 //
-int GSWNode::stack (GSWNode n, bool add) {
+int GSWNode::stack (GSWNode n) {
     labs.insert(n.labs.begin(), n.labs.end());
-    if (add) {
-        for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
-            a[it->first] = a[it->first] + it->second;
-        }
-        for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
-            i[it->first] = i[it->first] + it->second;
-        }
+    for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
+        a[it->first] = a[it->first] + it->second;
+    }
+    for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
+        i[it->first] = i[it->first] + it->second;
     }
     return 0;
 }
 
 //! stacks an edge e
 //
-int GSWEdge::stack (GSWEdge e, bool add) {
+int GSWEdge::stack (GSWEdge e) {
     labs.insert(e.labs.begin(), e.labs.end());
-    if (add) {
-        for (map<Tid,int>::iterator it=e.a.begin(); it!=e.a.end(); it++) {
-            a[it->first] = a[it->first] + it->second;
-        }
-        for (map<Tid,int>::iterator it=e.i.begin(); it!=e.i.end(); it++) {
-            i[it->first] = i[it->first] + it->second;
-        }
+    for (map<Tid,int>::iterator it=e.a.begin(); it!=e.a.end(); it++) {
+        a[it->first] = a[it->first] + it->second;
+    }
+    for (map<Tid,int>::iterator it=e.i.begin(); it!=e.i.end(); it++) {
+        i[it->first] = i[it->first] + it->second;
     }
     return 0;
 }
