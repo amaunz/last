@@ -1571,6 +1571,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
             
             map<int, map<int, GSWEdge> >::iterator it21 = einsert21.begin();
             map<int, map<int, GSWEdge> >::iterator it12 = einsert12.begin();
+            set<int>::iterator itc=c12_inc.begin();
 
             // Must recognize 'bags'
             bool do_ceiling=0;
@@ -1580,20 +1581,22 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
             int c=0;
             
             // Insert lowest conflict edge!
-            for(set<int>::iterator it=c12_inc.begin(); it!=c12_inc.end(); it++) {
-                if ( (it21 == einsert21.end()) || (*it < it21->first) ) {
-                    if ( (it12 == einsert12.end()) || (*it < it12->first) ) {
-                         if (*it>next_to) { 
-                            do_ceiling=1; c=*it; 
-                            #ifdef DEBUG 
-                            cout << "1) NEXT TO < " << *it << endl;
+            if (itc != c12_inc.end()) {
+                if ( (it21 == einsert21.end()) || (*itc < it21->first) ) {
+                    if ( (it12 == einsert12.end()) || (*itc < it12->first) ) {
+                         if (*itc>next_to) { 
+                            do_ceiling=1; c=*itc; 
+                            #ifdef DEBUG
+                            cout << "1) NEXT TO < " << *itc << endl;
                             #endif
                          }
-                         else u12.insert(*it);
+                         else { 
+                         u12.insert(*itc);
+                         }
                     }
                 }
+                if (u12.size()) next_to= maxi((*(--u12.end()))+1, core_ids.back()+1);
             }
-            if (u12.size()) next_to= maxi((*(--u12.end()))+1, core_ids.back()+1);
 
 
             // Decide which edge to insert, then do it!
@@ -1609,7 +1612,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                         }
                         else {
                             if (it21->first>next_to) { // Enter ceiling mode to resolve bag
-                                #ifdef DEBUG 
+                                #ifdef DEBUG
                                 cout << "2) NEXT TO < " << it21->first << endl;
                                 #endif
                                 do_ceiling=1;
@@ -1638,7 +1641,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                         }
                         else {
                             if (it12->first>next_to) { // Enter ceiling mode to resolve bag
-                                #ifdef DEBUG 
+                                #ifdef DEBUG
                                 cout << "3) NEXT TO < " << it12->first << endl;
                                 #endif
                                 do_ceiling=1;
@@ -1710,7 +1713,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
             }
 
 
-        } while (einsert21.size() || einsert12.size()); // Finished all edges for core ids
+        } while (einsert21.size() || einsert12.size() || c12_inc.size()); // Finished all edges for core ids
         #ifdef DEBUG
         if (fm::die) {
              cout << "Left while loop·" << endl;
