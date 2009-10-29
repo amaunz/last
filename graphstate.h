@@ -166,7 +166,7 @@ class GSWalk {
       edgemap temp_edgewalk;
       vector<int> to_nodes_ex; // nodes that were inserted due to high IDs - must be overwritten
 
-      int conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction);
+      int conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction, int ceiling=0);
       int stack (GSWalk* single, vector<int> core_ids);
 
       void add_edge(int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* core_ids, set<int>* u12);

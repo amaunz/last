@@ -1362,7 +1362,7 @@ void GraphState::puti ( FILE *f, int i ) {
 //! s-sided stack of two features by walking core ids
 //  NOTE: s is intended to 'carry' the growing meta pattern
 //  direction 0: s takes precedence
-int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction) {
+int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction, int ceiling) {
 
     // sanity check: core
     if (core_ids.size()>0) {
@@ -1415,7 +1415,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
             }
         } 
         
-       
+        bool did_ceiling=0;
+
         // Do ... while still edges unexpanded for core ids 
         do {
 
@@ -1469,6 +1470,12 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 i12.clear(); set_intersection(d1.begin(), d1.end(), d2.begin(), d2.end(), std::inserter(i12, i12.end()));                  // intersection (symmetric)
                 c12_tmp.clear(); set_difference(i12.begin(), i12.end(), core_ids.begin(), core_ids.end(), std::inserter(c12_tmp, c12_tmp.end()));
                 c12.clear(); set_difference(c12_tmp.begin(), c12_tmp.end(), u12.begin(), u12.end(), std::inserter(c12, c12.end()));        // intersection \ core_ids (symmetric)
+
+                // REMOVE MORE IDS FROM C12 HERE?????
+                each_it(c12, set<int>::iterator) {
+                    if (*it<core_ids.back()) c12.erase(*it);
+                }
+
                 d12.clear(); set_difference(d1.begin(), d1.end(), i12.begin(), i12.end(), std::inserter(d12, d12.end()));                  // mutex set
                 d21.clear(); set_difference(d2.begin(), d2.end(), i12.begin(), i12.end(), std::inserter(d21, d21.end()));
         
@@ -1486,38 +1493,40 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                         cout << ">" << endl;
                     }
                     #endif
-                    c12_inc.insert(*it);
+                    if (ceiling==0 || *it<ceiling) c12_inc.insert(*it);
                 }
         
                 // single edges
                 each_it(d21, set<int>::iterator) {
-                    if (*it <= nodewalk.size()) { // only insert in-bound edges
-                        #ifdef DEBUG
-                        if (fm::die) {
-                            map<int, GSWEdge>& w2j = e2->second;
-                            cout << "D21: " << j << "->" << w2j.find(*it)->first;
-                            cout << " < "; 
-                            set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
-                            for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                                cout << *it2 << " ";
+                    if (ceiling==0 || *it<ceiling) {
+                        if (*it <= nodewalk.size()) { // only insert in-bound edges
+                            #ifdef DEBUG
+                            if (fm::die) {
+                                map<int, GSWEdge>& w2j = e2->second;
+                                cout << "D21: " << j << "->" << w2j.find(*it)->first;
+                                cout << " < "; 
+                                set<InputEdgeLabel>& labs = w2j.find(*it)->second.labs;
+                                for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                                    cout << *it2 << " ";
+                                }
+                                cout << ">" << endl;
                             }
-                            cout << ">" << endl;
+                            #endif
+                            map<Tid, int> weightmap_a; 
+                            map<Tid, int> weightmap_i; 
+                            set<InputNodeLabel> inl;
+                            set<InputEdgeLabel> iel;
+                            GSWNode n = { inl, weightmap_a, weightmap_i };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
+                            ninsert21[*it][j]=n;
+                            einsert21[*it][j]=e;
                         }
-                        #endif
-                        map<Tid, int> weightmap_a; 
-                        map<Tid, int> weightmap_i; 
-                        set<InputNodeLabel> inl;
-                        set<InputEdgeLabel> iel;
-                        GSWNode n = { inl, weightmap_a, weightmap_i };
-                        GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
-                        ninsert21[*it][j]=n;
-                        einsert21[*it][j]=e;
-                    }
-                    else { // remember index for next round
-                        #ifdef DEBUG
-                        if (fm::die) cout << "Node-to-revisit: " << j << endl;
-                        #endif
-                        index_revisit.insert(j);
+                        else { // remember index for next round
+                            #ifdef DEBUG
+                            if (fm::die) cout << "Node-to-revisit: " << j << endl;
+                            #endif
+                            index_revisit.insert(j);
+                        }
                     }
                 }
 
@@ -1525,51 +1534,68 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
 
                 // single edges
                 each_it(d12, set<int>::iterator) {
-                    if (*it <= s->nodewalk.size()) {
-                        #ifdef DEBUG
-                        if (fm::die) {
-                            map<int, GSWEdge>& w1j = e1->second;
-                            cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
-                            cout << " < ";
-                            set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
-                            for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
-                                cout << *it2 << " ";
+                    if (ceiling==0 || *it<ceiling) {
+                        if (*it <= s->nodewalk.size()) {
+                            #ifdef DEBUG
+                            if (fm::die) {
+                                map<int, GSWEdge>& w1j = e1->second;
+                                cout << "D12: " << j << "->" << w1j.find(*it)->first; // needs no check for end() by def of d12
+                                cout << " < ";
+                                set<InputEdgeLabel>& labs = w1j.find(*it)->second.labs;
+                                for (set<InputEdgeLabel>::iterator it2=labs.begin(); it2!=labs.end(); it2++) {
+                                    cout << *it2 << " ";
+                                }
+                                cout << ">" << endl;
                             }
-                            cout << ">" << endl;
+                            #endif
+                            map<Tid, int> weightmap_a; 
+                            map<Tid, int> weightmap_i; 
+                            set<InputNodeLabel> inl;
+                            set<InputEdgeLabel> iel;
+                            GSWNode n = { inl, weightmap_a, weightmap_i };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
+                            ninsert12[*it][j]=n;
+                            einsert12[*it][j]=e;
                         }
-                        #endif
-                        map<Tid, int> weightmap_a; 
-                        map<Tid, int> weightmap_i; 
-                        set<InputNodeLabel> inl;
-                        set<InputEdgeLabel> iel;
-                        GSWNode n = { inl, weightmap_a, weightmap_i };
-                        GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
-                        ninsert12[*it][j]=n;
-                        einsert12[*it][j]=e;
-                    }
-                    else {
-                        #ifdef DEBUG
-                        if (fm::die) cout << "Node-to-revisit: " << j << endl;
-                        #endif
-                        index_revisit.insert(j);
+                        else {
+                            #ifdef DEBUG
+                            if (fm::die) cout << "Node-to-revisit: " << j << endl;
+                            #endif
+                            index_revisit.insert(j);
+                        }
                     }
                 }
                 
             } // end for core ids
 
             
-
-
             map<int, map<int, GSWEdge> >::iterator it21 = einsert21.begin();
             map<int, map<int, GSWEdge> >::iterator it12 = einsert12.begin();
+
+            // Must recognize 'bags'
+            bool do_ceiling=0;
+            int next_to=0; 
+            if (u12.size()) next_to= maxi((*(--u12.end()))+1, core_ids.back()+1);
+            else next_to=core_ids.back()+1;
+            int c=0;
+            
             // Insert lowest conflict edge!
             for(set<int>::iterator it=c12_inc.begin(); it!=c12_inc.end(); it++) {
                 if ( (it21 == einsert21.end()) || (*it < it21->first) ) {
                     if ( (it12 == einsert12.end()) || (*it < it12->first) ) {
-                        u12.insert(*it);
+                         if (*it>next_to) { 
+                            do_ceiling=1; c=*it; 
+                            #ifdef DEBUG 
+                            cout << "1) NEXT TO < " << *it << endl;
+                            #endif
+                         }
+                         else u12.insert(*it);
                     }
                 }
             }
+            if (u12.size()) next_to= maxi((*(--u12.end()))+1, core_ids.back()+1);
+
+
             // Decide which edge to insert, then do it!
             if ( it21 != einsert21.end() || it12 != einsert12.end() ) {
                 bool insertion_done = 0;
@@ -1582,15 +1608,24 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                             cerr << "Error! 21: to-node '" << it21->first << "' is out of bound." << endl; exit(1);
                         }
                         else {
-                            add_edge(
-                                it21->second.begin()->first, 
-                                it21->second.begin()->second, 
-                                ninsert21[it21->first][it21->second.begin()->first],
-                                1,
-                                &core_ids,
-                                &u12
-                            );
-                            u12.insert(it21->first);
+                            if (it21->first>next_to) { // Enter ceiling mode to resolve bag
+                                #ifdef DEBUG 
+                                cout << "2) NEXT TO < " << it21->first << endl;
+                                #endif
+                                do_ceiling=1;
+                                c=it21->first;
+                            }
+                            else {
+                                add_edge(
+                                    it21->second.begin()->first, 
+                                    it21->second.begin()->second, 
+                                    ninsert21[it21->first][it21->second.begin()->first],
+                                    1,
+                                    &core_ids,
+                                    &u12
+                                );
+                                u12.insert(it21->first);
+                            }
                         }
                         insertion_done = 1;
                     }
@@ -1602,21 +1637,53 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                             cerr << "Error! 12: to-node '" << it12->first << "' is out of bound." << endl; exit(1);
                         }
                         else {
-                            s->add_edge(
-                                it12->second.begin()->first, 
-                                it12->second.begin()->second, 
-                                ninsert12[it12->first][it12->second.begin()->first],
-                                1,
-                                &core_ids,
-                                &u12
-                            );
-                            u12.insert(it12->first);
+                            if (it12->first>next_to) { // Enter ceiling mode to resolve bag
+                                #ifdef DEBUG 
+                                cout << "3) NEXT TO < " << it12->first << endl;
+                                #endif
+                                do_ceiling=1;
+                                c=it12->first;
+                            }
+                            else {
+                                s->add_edge(
+                                    it12->second.begin()->first, 
+                                    it12->second.begin()->second, 
+                                    ninsert12[it12->first][it12->second.begin()->first],
+                                    1,
+                                    &core_ids,
+                                    &u12
+                                );
+                                u12.insert(it12->first);
+                            }
                         }
                         insertion_done = 1;
                     }
                 }
+
                 if (!insertion_done) { cerr << "Error! No insertion done. " << einsert21.size() << " " << einsert12.size() << endl; exit(1); } 
             }
+
+            // bag handling
+            if (do_ceiling) {
+                #ifdef DEBUG
+                if (fm::die) {
+                    cout << endl << endl << endl << "STARTING CEILING MODE next_to: '" << next_to << "' c: '" << c << "'" << endl << endl << endl;
+                }
+                #endif
+                conflict_resolution(vector<int> (u12.begin(),u12.end()), s, direction, c);
+                for (int i=next_to; i<c; i++) {
+                    u12.insert(i);
+                }
+                #ifdef DEBUG
+                if (fm::die) {
+                    cout << endl << endl << endl << "ENDING CEILING MODE next_to: '" << next_to << "' c: '" << c << "'" << endl << endl << endl;
+                }
+                #endif
+                do_ceiling=0;
+                //did_ceiling=1;
+            }
+
+
             #ifdef DEBUG
             else {
                 if (fm::die) {
@@ -1651,39 +1718,40 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
         #endif
        
 
+        if (!ceiling) {
+            #ifdef DEBUG
+            if (fm::die) {
+                //cout << this << endl;
+                //cout << s << endl;
+                cout << "-stack-" << endl;
+            }
+            #endif
 
-        #ifdef DEBUG
-        if (fm::die) {
-            //cout << this << endl;
-            //cout << s << endl;
-            cout << "-stack-" << endl;
-        }
-        #endif
-
-        each_it(edgewalk, edgemap::iterator) {
-            for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
-                if (it2->first >= nodewalk.size()) {
-                    cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
-                    cout << this << endl;
-                    exit(1);
+            each_it(edgewalk, edgemap::iterator) {
+                for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                    if (it2->first >= nodewalk.size()) {
+                        cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
+                        cout << this << endl;
+                        exit(1);
+                    }
                 }
             }
-        }
-        each_it(s->edgewalk, edgemap::iterator) {
-            for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
-                if (it2->first >= s->nodewalk.size()) {
-                    cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
-                    cout << s << endl;
-                    exit(1);
+            each_it(s->edgewalk, edgemap::iterator) {
+                for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                    if (it2->first >= s->nodewalk.size()) {
+                        cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
+                        cout << s << endl;
+                        exit(1);
+                    }
                 }
             }
-        }
 
-        // stack labels and activities to s
-        // all core id nodes
-        // all edges leaving core id nodes
-        // this includes edges inside the core, as well as edges leaving the core
-        s->stack(this, core_ids);
+            // stack labels and activities to s
+            // all core id nodes
+            // all edges leaving core id nodes
+            // this includes edges inside the core, as well as edges leaving the core
+            s->stack(this, core_ids);
+        }
 
 
         #ifdef DEBUG
@@ -1694,6 +1762,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
         }
         #endif
    
+
         // calculate one step core ids 
         #ifdef DEBUG
         if (fm::die) if (index_revisit.size()) cout << "Revisiting '";
@@ -1708,9 +1777,10 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
         if (fm::die) if (index_revisit.size()) cout << "'." << endl;
         #endif
 
-        if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, direction);
+        if (!ceiling && did_ceiling) { cout << "DID CEILING" << endl; exit(1); }
+        else if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, direction, ceiling);
 
-        each_it(s->nodewalk, nodevector::iterator) {
+        if (!ceiling) each_it(s->nodewalk, nodevector::iterator) {
             if (it->labs.size() == 0) {
                 cerr << "Error! S-Labels left to fill." << endl; exit(1);
             }
@@ -1827,6 +1897,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     if (reorder) { // 'hard' insertion: reorder edges by moving 1 up
 
         if (to_core_range) {
+        /*
             // find current edge
             GSWEdge val; edgemap::iterator it;
             for (it=edgewalk.begin(); it!=edgewalk.end(); it++) {
@@ -1839,6 +1910,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
             int coreback=(core_ids->back())+1; if (coreback>val.to) val.to=coreback;
             add_edge(it->first, val, nodewalk[e.to], 1, core_ids, u12 );
             edgewalk[it->first].erase(e.to);
+        */
         }
 
         else {
