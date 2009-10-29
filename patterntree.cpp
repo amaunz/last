@@ -883,6 +883,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); }
         map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); }
         fm::graphstate->print(gsw, weightmap_a, weightmap_i); // print to graphstate walk
+        gsw->deact_act=fm::deact_act;
         gsw_size = gsw->nodewalk.size();
         if (cur_chisq >= fm::chisq->sig) {
             stop_criterium=0;
