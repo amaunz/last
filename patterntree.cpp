@@ -948,7 +948,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 5.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl;exit(1); }
-    if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
+    if (!LAST_nsign && gsw->deact_act==siblingwalk->deact_act) { 
           #ifdef DEBUG
           if (fm::die) cout << "CR gsw" << endl;
           #endif

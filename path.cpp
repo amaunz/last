@@ -595,7 +595,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 2.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-    if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
+    if (!LAST_nsign && gsw->deact_act==siblingwalk->deact_act) { 
       #ifdef DEBUG
         if (fm::die) cout << "CR gsw" << endl;
       #endif
@@ -705,7 +705,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 3.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-    if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
+    if (!LAST_nsign && gsw->deact_act==siblingwalk->deact_act) { 
       #ifdef DEBUG
         if (fm::die) cout << "CR gsw" << endl;
       #endif
@@ -825,7 +825,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
           // !STOP: MERGE TO SIBLINGWALK
           if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 4.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-          if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
+          if (!LAST_nsign && gsw->deact_act==siblingwalk->deact_act) { 
               #ifdef DEBUG
              if (fm::die) cout << "CR gsw" << endl;
               #endif
@@ -960,7 +960,7 @@ void Path::expand () {
 
       // !STOP: MERGE TO SIBLINGWALK
       if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 1.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-      if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
+      if (!LAST_nsign && gsw->deact_act==siblingwalk->deact_act) { 
           #ifdef DEBUG
           if (fm::die) cout << "CR gsw" << endl;
           #endif
