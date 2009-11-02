@@ -504,7 +504,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     GSWalk* topdown = NULL;
 
     int gsw_size=0;
-    bool stop_criterium=1;
+    bool LAST_nsign=1;
 
     #ifdef DEBUG
     int diehard = 0;
@@ -537,7 +537,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
         gsw->deact_act=fm::chisq->deact_act;
         gsw_size=gsw->nodewalk.size();
         if (cur_chisq >= fm::chisq->sig) {
-            stop_criterium=0;
+            LAST_nsign=0;
         }
     }
 
@@ -565,7 +565,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
               if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 2.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
               // STOP: OUTPUT TOPDOWN
-              if (stop_criterium) {
+              if (LAST_nsign || gsw->deact_act!=topdown->deact_act) {
                   #ifdef DEBUG
                   if (fm::die) cout << "STOP CRITERIUM at POS " << legcnt << " HOPS " << fm::last_hops << " CHI " << cur_chisq << endl;
                   #endif
@@ -595,7 +595,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 2.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-    if (!stop_criterium) { 
+    if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
       #ifdef DEBUG
         if (fm::die) cout << "CR gsw" << endl;
       #endif
@@ -628,7 +628,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     GSWalk* topdown = NULL;
 
     int gsw_size=0;
-    bool stop_criterium=1;
+    bool LAST_nsign=1;
 
     // Calculate chisq
     if (fm::chisq->active) fm::chisq->Calc(legs[index]->occurrences.elements);
@@ -647,7 +647,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
         gsw->deact_act=fm::chisq->deact_act;
         gsw_size=gsw->nodewalk.size();
         if (cur_chisq >= fm::chisq->sig) {
-            stop_criterium=0;
+            LAST_nsign=0;
         }
     }
 
@@ -675,7 +675,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
               if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 3.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
               // STOP: OUTPUT TOPDOWN
-              if (stop_criterium) {
+              if (LAST_nsign || gsw->deact_act!=topdown->deact_act) {
                   #ifdef DEBUG
                   if (fm::die) cout << "STOP CRITERIUM at POS " << legcnt << " HOPS " << fm::last_hops << " CHI " << cur_chisq << endl;
                   #endif
@@ -705,7 +705,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 3.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-    if (!stop_criterium) { 
+    if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
       #ifdef DEBUG
         if (fm::die) cout << "CR gsw" << endl;
       #endif
@@ -743,7 +743,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           GSWalk* topdown = NULL;
 
           int gsw_size=0;
-          bool stop_criterium=1;
+          bool LAST_nsign=1;
 
           if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
           float cur_chisq = fm::chisq->p;
@@ -768,7 +768,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               gsw->deact_act=fm::chisq->deact_act;
               gsw_size=gsw->nodewalk.size();
               if (cur_chisq >= fm::chisq->sig) {
-                  stop_criterium=0;
+                  LAST_nsign=0;
               }
           }
 
@@ -795,7 +795,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
                     if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 4.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
                     // STOP: OUTPUT TOPDOWN
-                    if (stop_criterium) {
+                    if (LAST_nsign || gsw->deact_act!=topdown->deact_act) {
                         #ifdef DEBUG
                         if (fm::die) cout << "STOP CRITERIUM at POS " << legcnt << " HOPS " << fm::last_hops << " CHI " << cur_chisq << endl;
                         #endif
@@ -825,7 +825,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
           // !STOP: MERGE TO SIBLINGWALK
           if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 4.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-          if (!stop_criterium) { 
+          if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
               #ifdef DEBUG
              if (fm::die) cout << "CR gsw" << endl;
               #endif
@@ -883,7 +883,7 @@ void Path::expand () {
     GSWalk* topdown = NULL;
 
     int gsw_size=0;
-    bool stop_criterium=1;
+    bool LAST_nsign=1;
 
     PathTuple &tuple = legs[i]->tuple;
     if ( tuple.nodelabel >= nodelabels[0] ) {
@@ -905,7 +905,7 @@ void Path::expand () {
           gsw->deact_act=fm::chisq->deact_act;
           gsw_size=gsw->nodewalk.size();
           if (cur_chisq >= fm::chisq->sig) {
-              stop_criterium=0;
+              LAST_nsign=0;
           }
       }
 
@@ -930,7 +930,7 @@ void Path::expand () {
 
                 if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 1.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
                 // STOP: OUTPUT TOPDOWN
-                if (stop_criterium) {
+                if (LAST_nsign || gsw->deact_act!=topdown->deact_act) {
                     #ifdef DEBUG
                     if (fm::die) cout << "STOP CRITERIUM at POS " << legcnt << " HOPS " << fm::last_hops << " CHI " << cur_chisq << endl;
                     #endif
@@ -960,7 +960,7 @@ void Path::expand () {
 
       // !STOP: MERGE TO SIBLINGWALK
       if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 1.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
-      if (!stop_criterium) { 
+      if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
           #ifdef DEBUG
           if (fm::die) cout << "CR gsw" << endl;
           #endif

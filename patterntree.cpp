@@ -861,7 +861,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     GSWalk* topdown = NULL;
 
     int gsw_size=0;
-    bool stop_criterium=1;
+    bool LAST_nsign=1;
 
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
     float cur_chisq=fm::chisq->p;
@@ -886,7 +886,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         gsw->deact_act=fm::chisq->deact_act;
         gsw_size = gsw->nodewalk.size();
         if (cur_chisq >= fm::chisq->sig) {
-            stop_criterium=0;
+            LAST_nsign=0;
         }
     }
 
@@ -917,7 +917,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
 
             if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 5.1. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
             // STOP: OUTPUT TOPDOWN
-            if (stop_criterium) { 
+            if (LAST_nsign || gsw->deact_act!=topdown->deact_act) { 
                 #ifdef DEBUG
                 if (fm::die) cout << "STOP CRITERIUM at POS " << legcnt << " HOPS " << fm::last_hops << " CHI " << cur_chisq << endl;
                 #endif
@@ -948,7 +948,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 5.2. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl;exit(1); }
-    if (!stop_criterium) { 
+    if (!LAST_nsign && gsw->deact_act==topdown->deact_act) { 
           #ifdef DEBUG
           if (fm::die) cout << "CR gsw" << endl;
           #endif
@@ -1031,7 +1031,7 @@ void PatternTree::checkIfIndeedNormal () {
 ostream& operator<< (ostream& os, GSWalk* gsw) {
     static int gsw_counter=0;
     gsw_counter++;
-    cout << "t  " << gsw_counter << endl;
+    cout << "t # " << gsw_counter << " " << gsw->deact_act << endl;
 
     for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
         os << distance(gsw->nodewalk.begin(), it);

@@ -46,7 +46,7 @@ void GraphState::init () {
 
   /*
   deletededges.clear();
-  if (treetuples != NULL)  treetuples->clear();
+  if (treetuples != NULL) treetuples->clear();
   if (closetuples != NULL) closetuples->clear();
   nodesinpreorder.clear();
   */ 
@@ -1413,6 +1413,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                     }
                 }
             }
+            s->deact_act=deact_act;
         } 
         
         bool did_ceiling=0;
