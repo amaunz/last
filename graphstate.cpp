@@ -1413,7 +1413,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                     }
                 }
             }
-            s->deact_act=deact_act;
+            s->activating=activating;
         } 
         
         bool did_ceiling=0;

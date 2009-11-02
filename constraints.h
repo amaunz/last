@@ -43,9 +43,9 @@ class ChisqConstraint : public Constraint {
     float sig, chisq, p, u;
     bool active;
     set<Tid> fa_set, fi_set;
-    bool deact_act; //defaults to deactivating (0)
+    bool activating; //defaults to deactivating (0)
 
-    ChisqConstraint (float sig) : na(0), ni(0), n(0), fa(0), fi(0), sig(sig), chisq(0.0), p(0.0), u(0.0), active(0), deact_act(0) {}
+    ChisqConstraint (float sig) : na(0), ni(0), n(0), fa(0), fi(0), sig(sig), chisq(0.0), p(0.0), u(0.0), active(0), activating(0) {}
 
     //!< Calculate chi^2 of current and upper bound for chi^2 of more specific features (see Morishita and Sese, 2000)
     template <typename OccurrenceType>

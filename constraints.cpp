@@ -27,7 +27,10 @@ float ChisqConstraint::ChiSq(float x, float y) {
         impact = x/(float)n;
         ea = na * impact; 
         ei = ni * impact; 
-        if (y>ea) deact_act=1;
+
+        if (y>ea) activating=1; 
+        else activating=0;
+
 
         if (ea>0 && ei>0) chisq = (y-ea-0.5)*(y-ea-0.5)/ea + (x-y-ei-0.5)*(x-y-ei-0.5)/ei;
 
