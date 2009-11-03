@@ -885,9 +885,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         fm::graphstate->print(gsw, weightmap_a, weightmap_i); // print to graphstate walk
         gsw->activating=fm::chisq->activating;
         gsw_size = gsw->nodewalk.size();
-        if (cur_chisq >= fm::chisq->sig) {
-            LAST_nsign=0;
-        }
+        if (cur_chisq >= fm::chisq->sig) LAST_nsign=0;
     }
 
     

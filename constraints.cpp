@@ -20,7 +20,7 @@
 
 #include "constraints.h"
 
-float ChisqConstraint::ChiSq(float x, float y) {
+float ChisqConstraint::ChiSq(float x, float y, bool decide_activating) {
 
         float ea = 0.0, ei = 0.0, impact = 0.0;
         
@@ -28,9 +28,9 @@ float ChisqConstraint::ChiSq(float x, float y) {
         ea = na * impact; 
         ei = ni * impact; 
 
-        if (y>ea) activating=1; 
-        else activating=0;
-
+        if (decide_activating) {
+            if (y>ea) activating=1; else activating=0;
+        }
 
         if (ea>0 && ei>0) chisq = (y-ea-0.5)*(y-ea-0.5)/ea + (x-y-ei-0.5)*(x-y-ei-0.5)/ei;
 

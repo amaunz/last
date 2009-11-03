@@ -1393,7 +1393,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
         if (s->nodewalk.size() == 0) {
             #ifdef DEBUG
             if (fm::die) {
-                cout << "Initializing new SW" << endl;
+                cout << "Initializing new SW (" << activating << ")." << endl;
             }
             #endif
             for (vector<int>::iterator index = core_ids.begin(); index!=core_ids.end(); index++) {
@@ -1414,6 +1414,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 }
             }
             s->activating=activating;
+            cout << "init to " << s->activating << endl;
         } 
         
         bool did_ceiling=0;

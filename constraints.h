@@ -58,21 +58,20 @@ class ChisqConstraint : public Constraint {
         fi = fi_set.size(); // fi is x(I)-y(I)  in Morishita and Sese
 
         // chisq_p for current feature
-        p = ChiSq(fa+fi, fa);
+        p = ChiSq(fa+fi,fa,1);
 
         // upper bound u for chisq_p of more specific features
         float u1 = 0.0, u2 = 0.0;
-        u1 = ChiSq(fa,fa);                                    // upper bound at
-        u2 = ChiSq(fi,0);                                     // max{ chisq (y(I), y(I)) ,
+        u1 = ChiSq(fa,fa,0);                                  // upper bound at
+        u2 = ChiSq(fi,0,0);                                   // max{ chisq (y(I), y(I)) ,
         u = u1; if (u2>u1) u = u2;                            //      chisq (x(I)-y(I),0) }
     
     }
 
-
     private:
 
     //!< Calculates chi^2 and upper bound values
-    float ChiSq(float x, float y);
+    float ChiSq(float x, float y, bool decide_activating);
 
     //!< Counts occurrences of legs in active and inactive compounds
     template <typename OccurrenceType>
