@@ -1414,7 +1414,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 }
             }
             s->activating=activating;
-            cout << "init to " << s->activating << endl;
+            //cout << "init to " << s->activating << endl;
         } 
         
         bool did_ceiling=0;
