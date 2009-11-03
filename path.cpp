@@ -549,7 +549,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           delete siblingwalk;
           siblingwalk = new GSWalk();
     }
-    else {
+    if (!nsign && ((gsw->activating==siblingwalk->activating) || !siblingwalk->edgewalk.size())) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw 1" << endl;
         #endif
@@ -663,7 +663,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           delete siblingwalk;
           siblingwalk = new GSWalk();
     }
-    else {
+    if (!nsign && ((gsw->activating==siblingwalk->activating) || !siblingwalk->edgewalk.size())) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw 2" << endl;
         #endif
@@ -790,7 +790,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
                 delete siblingwalk;
                 siblingwalk = new GSWalk();
           }
-          else {
+          if (!nsign && ((gsw->activating==siblingwalk->activating) || !siblingwalk->edgewalk.size())) {
               #ifdef DEBUG
               if (fm::die) cout << "CR gsw 3" << endl;
               #endif
@@ -933,7 +933,7 @@ void Path::expand () {
             delete siblingwalk;
             siblingwalk = new GSWalk();
       }
-      else {
+      if (!nsign && ((gsw->activating==siblingwalk->activating) || !siblingwalk->edgewalk.size())) {
           #ifdef DEBUG
           if (fm::die) cout << "CR gsw 4" << endl;
           #endif

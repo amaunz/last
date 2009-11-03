@@ -896,7 +896,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
           delete siblingwalk;
           siblingwalk = new GSWalk();
     }
-    else {
+    if (!nsign && ((gsw->activating==siblingwalk->activating) || !siblingwalk->edgewalk.size())) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw" << endl;
         #endif
