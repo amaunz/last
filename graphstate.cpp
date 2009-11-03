@@ -1425,8 +1425,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
             #ifdef DEBUG
             if (fm::die) {
                 cout << "-CR begin-" << endl;
-                cout << this << endl;
-                cout << s << endl;
+                cout << this ;
+                cout << s ;
                 cout << "core: '";
                 each(core_ids) cout << core_ids[i] << " ";
                 cout << "'" << endl;
@@ -1701,7 +1701,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
                     if (it2->first >= nodewalk.size()) {
                         cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
-                        cout << this << endl;
+                        cout << this ;
                     }
                 }
             }
@@ -1709,7 +1709,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
                     if (it2->first >= s->nodewalk.size()) {
                         cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
-                        cout << s << endl;
+                        cout << s ;
                     }
                 }
             }
@@ -1726,8 +1726,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
         if (!ceiling) {
             #ifdef DEBUG
             if (fm::die) {
-                //cout << this << endl;
-                //cout << s << endl;
+                //cout << this ;
+                //cout << s ;
                 cout << "-stack-" << endl;
             }
             #endif
@@ -1736,7 +1736,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
                     if (it2->first >= nodewalk.size()) {
                         cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
-                        cout << this << endl;
+                        cout << this ;
                         exit(1);
                     }
                 }
@@ -1745,7 +1745,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
                     if (it2->first >= s->nodewalk.size()) {
                         cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
-                        cout << s << endl;
+                        cout << s ;
                         exit(1);
                     }
                 }
@@ -1761,8 +1761,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
 
         #ifdef DEBUG
         if (fm::die) {
-            cout << this << endl;
-            cout << s << endl;
+            cout << this ;
+            cout << s ;
             cout << "-CR end-" << endl;
         }
         #endif

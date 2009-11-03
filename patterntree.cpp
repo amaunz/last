@@ -862,7 +862,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     GSWalk* topdown = NULL;
 
     int gsw_size=0;
-    bool LAST_nsign=1;
+    bool nsign=1;
 
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
     float cur_chisq=fm::chisq->p;
@@ -886,17 +886,23 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         fm::graphstate->print(gsw, weightmap_a, weightmap_i); // print to graphstate walk
         gsw->activating=fm::chisq->activating;
         gsw_size = gsw->nodewalk.size();
-        if (cur_chisq >= fm::chisq->sig) LAST_nsign=0;
+        if (cur_chisq >= fm::chisq->sig) nsign=0;
     }
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl;exit(1); }
-    if (!LAST_nsign && (!siblingwalk->edgewalk.size() || gsw->activating==siblingwalk->activating)) { 
-          #ifdef DEBUG
-          if (fm::die) cout << "CR gsw" << endl;
-          #endif
-          gsw->conflict_resolution(core_ids, siblingwalk, 0); legcnt++; fm::last_hops++; 
+    if (nsign || gsw->activating!=siblingwalk->activating) { // empty sw needs no checks
+          cout << siblingwalk ; 
+          delete siblingwalk;
+          siblingwalk = new GSWalk();
     }
+    else {
+        #ifdef DEBUG
+        if (fm::die) cout << "CR gsw" << endl;
+        #endif
+        gsw->conflict_resolution(core_ids, siblingwalk, 0); legcnt++; fm::last_hops++; 
+    }
+
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
     
@@ -918,23 +924,19 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
             #ifdef DEBUG
             if (fm::die) {
                 cout << "TOPDOWN2 BEGIN " << core_ids.size() << endl;
-                cout << topdown << endl;
+                cout << topdown ;
                 cout << "--result--" << endl;
-                cout << siblingwalk << endl;
+                cout << siblingwalk ;
             }
             #endif
 
             if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 5.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
             // STOP: OUTPUT TOPDOWN
-            if (siblingwalk->nodewalk.size() && siblingwalk->activating!=topdown->activating) { 
+            if (nsign || (siblingwalk->edgewalk.size() && siblingwalk->activating!=topdown->activating)) { 
                 #ifdef DEBUG
                 if (fm::die) cout << "STOP CRITERIUM at POS " << legcnt << " HOPS " << fm::last_hops << " CHI " << cur_chisq << endl;
                 #endif
-                topdown->svd();
-                cout << topdown << endl;
-                cout << siblingwalk << endl;
-                delete siblingwalk;
-                siblingwalk = new GSWalk();
+                cout << topdown ;
                 fm::last_hops=0;
                 legcnt=0;
             }
@@ -947,9 +949,9 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
             #ifdef DEBUG
             if (fm::die) {
                 cout << "TOPDOWN2 END " << core_ids.size() << endl;
-                cout << topdown << endl;
+                cout << topdown ;
                 cout << "--result--" << endl;
-                cout << siblingwalk << endl;
+                cout << siblingwalk ;
             }
             #endif
 
@@ -1030,8 +1032,11 @@ void PatternTree::checkIfIndeedNormal () {
 
 ostream& operator<< (ostream& os, GSWalk* gsw) {
     static int gsw_counter=0;
-    gsw_counter++;
-    cout << "t # " << gsw_counter << " " << gsw->activating << endl;
+    
+    if (gsw->edgewalk.size()) {
+        gsw_counter++;
+        os << "t # " << gsw_counter << " " << gsw->activating << endl;
+    }
 
     for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
         os << distance(gsw->nodewalk.begin(), it);
@@ -1106,6 +1111,10 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
 
             os << endl;
         }
+    }
+
+    if (gsw->edgewalk.size()) {
+        os << endl;
     }
     return os;
 };
