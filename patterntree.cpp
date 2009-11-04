@@ -37,7 +37,6 @@ namespace fm {
     extern bool gsp_out;
     extern int die;
     extern bool do_last;
-    extern unsigned int last_hops;
 
     extern Database* database;
     extern ChisqConstraint* chisq;
@@ -892,7 +891,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl;exit(1); }
     if (nsign || gsw->activating!=siblingwalk->activating) { // empty sw needs no checks
-          cout << siblingwalk ; 
+          if (siblingwalk->hops>1) cout << siblingwalk->hops << endl << siblingwalk ; 
           delete siblingwalk;
           siblingwalk = new GSWalk();
     }
@@ -900,7 +899,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw" << endl;
         #endif
-        gsw->conflict_resolution(core_ids, siblingwalk, 0); legcnt++; fm::last_hops++; 
+        gsw->conflict_resolution(core_ids, siblingwalk, 0);
     }
 
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -909,9 +908,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     // RECURSE
     if ( ( !fm::do_pruning ||  (  !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) ) &&
          (  fm::refine_singles || (legs[i]->occurrences.frequency>1) )
-    
        ) {
-
         PatternTree p ( *this, i );
         if (cur_chisq > max.first) { fm::updated = true; topdown = p.expand (pair<float, string>(cur_chisq,fm::graphstate->to_s(legs[i]->occurrences.frequency)), gsw_size); }
         else topdown = p.expand (max, gsw_size);
@@ -932,13 +929,11 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
 
             if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Already nodes marked as available 5.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
             // STOP: OUTPUT TOPDOWN
-            if (nsign || (siblingwalk->edgewalk.size() && siblingwalk->activating!=topdown->activating)) { 
+            if (nsign || siblingwalk->activating!=topdown->activating) { 
                 #ifdef DEBUG
-                if (fm::die) cout << "STOP CRITERIUM at POS " << legcnt << " HOPS " << fm::last_hops << " CHI " << cur_chisq << endl;
+                if (fm::die) cout << "STOP CRITERIUM at CHI " << cur_chisq << endl;
                 #endif
-                cout << topdown ;
-                fm::last_hops=0;
-                legcnt=0;
+                if (topdown->hops>1) cout << topdown->hops << topdown ;
             }
             // ELSE: MERGE TO SIBLINGWALK
             else {
@@ -1032,7 +1027,7 @@ void PatternTree::checkIfIndeedNormal () {
 
 ostream& operator<< (ostream& os, GSWalk* gsw) {
     static int gsw_counter=0;
-    
+   
     if (gsw->edgewalk.size()) {
         gsw_counter++;
         os << "t # " << gsw_counter << " " << gsw->activating << endl;

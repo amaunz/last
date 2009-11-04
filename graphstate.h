@@ -166,6 +166,7 @@ class GSWalk {
       edgemap temp_edgewalk;
       vector<int> to_nodes_ex; // nodes that were inserted due to high IDs - must be overwritten
       bool activating;
+      int hops;
 
       int conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction, int ceiling=0);
       int stack (GSWalk* single, vector<int> core_ids);
@@ -179,7 +180,7 @@ class GSWalk {
       }
       friend ostream& operator<< (ostream &out, GSWalk* gsw);
 
-      GSWalk() : activating(0) {
+      GSWalk() : activating(0), hops(0) {
         to_nodes_ex.clear();
       }
 };

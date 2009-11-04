@@ -1799,6 +1799,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
         }
         */
 
+        if (*core_ids.begin() == 0) s->hops++;
         return 0;
     }
     return 1;
