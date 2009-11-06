@@ -359,7 +359,7 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
   // convert occurrence lists to weight maps with initial weight 1
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     set<InputNodeLabel> inl; inl.insert(fm::database->nodelabels[nodes[i].label].inputlabel);
-    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i, 0 } );
+    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i, 0, 0 } );
   }
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
@@ -367,7 +367,7 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
       GraphState::GSEdge &edge = nodes[i].edges[j];
       if ( i < edge.tonode ) {
           set<InputEdgeLabel> iel; iel.insert((InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel);
-          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i, 0 } ;
+          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i, 0, 0 } ;
       }
     }
   }
@@ -1406,8 +1406,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i };
-                            GSWEdge e = { to->first, iel, weightmap_a, weightmap_i };
+                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0 };
+                            GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0 };
                             s->add_edge(from->first, e, n, 0, &core_ids, &u12);
                         }
                     }
@@ -1518,8 +1518,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i };
-                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
+                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0 };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 0 };
                             ninsert21[*it][j]=n;
                             einsert21[*it][j]=e;
                         }
@@ -1554,8 +1554,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i };
-                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i };
+                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 1 };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 1 };
                             ninsert12[*it][j]=n;
                             einsert12[*it][j]=e;
                         }

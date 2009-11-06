@@ -134,6 +134,8 @@ struct GSWNode {
     map<Tid, int> a;
     map<Tid, int> i;
     bool deleted;
+    bool optional;
+
     int stack(GSWNode n);
     friend ostream& operator<< (ostream &out, GSWNode* n);
 };
@@ -148,6 +150,8 @@ struct GSWEdge {
     map<Tid, int> a;
     map<Tid, int> i;
     bool deleted;
+    bool optional;
+
     int stack(GSWEdge e);
     static bool lt_to (GSWEdge& e1, GSWEdge& e2){
         if (e1.to < e2.to) return 1;
