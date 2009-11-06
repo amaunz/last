@@ -1113,7 +1113,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             //#endif*/
 
             if (it2->second.deleted || it2->second.optional) os << " [";
-            if (it2->second.optional) os << "O";
+            if (it2->second.optional>0) os << it2->second.optional;
             if (it2->second.deleted) os << "D";
             if (it2->second.deleted || it2->second.optional) os << "] ";
 

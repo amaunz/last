@@ -1554,8 +1554,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 1 };
-                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 1 };
+                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, s->hops+1 };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, s->hops+1 };
                             ninsert12[*it][j]=n;
                             einsert12[*it][j]=e;
                         }
