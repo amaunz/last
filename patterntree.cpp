@@ -893,7 +893,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     if (nsign || gsw->activating!=siblingwalk->activating) { // empty sw needs no checks
           if (siblingwalk->hops>1) {
                 siblingwalk->svd();
-                cout << endl << siblingwalk ; 
+                cout << siblingwalk ; 
           }
           delete siblingwalk;
           siblingwalk = new GSWalk();
@@ -1070,7 +1070,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
         os << "}" ;
         #endif*/
 
-        if (it->deleted) os << "[D] ";
+        if (it->deleted) os << " [D] ";
 
         os << endl;
     }
@@ -1112,7 +1112,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             os << "}";
             //#endif*/
 
-            if (it2->second.deleted) os << "[D] ";
+            if (it2->second.deleted) os << " [D] ";
 
             os << endl;
         }

@@ -2009,17 +2009,19 @@ void GSWalk::svd () {
 
     // Init A
     for (int i=0; i<adj_m_size; i++) { // init upper right
-        for(int j=i+1; j<adj_m_size; j++) {
-            map<int,GSWEdge>::iterator it2 = edgewalk[i].find(j);
-            if (it2!=edgewalk[i].end()) {
-                double count=0.0;
-                for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
-                    count += it3->second;
+        if (edgewalk.find(i)!=edgewalk.end()) {
+            for(int j=i+1; j<adj_m_size; j++) {
+                map<int,GSWEdge>::iterator it2 = edgewalk[i].find(j);
+                if (it2!=edgewalk[i].end()) {
+                    double count=0.0;
+                    for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
+                        count += it3->second;
+                    }
+                    for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
+                        count += it3->second;
+                    }
+                    gsl_matrix_set(A,i,j,count);
                 }
-                for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
-                    count += it3->second;
-                }
-                gsl_matrix_set(A,i,j,count);
             }
         }
     }
@@ -2089,23 +2091,27 @@ void GSWalk::svd () {
 
     gsl_matrix_free(spur);
 
-    gsl_matrix_free(A);
     gsl_matrix_free(AS);
     gsl_vector_free(s);
     gsl_matrix_free(V);
 
     // Compress graph representation
     for (int i=0; i<adj_m_size; i++) { // init upper right
-        for(int j=i+1; j<adj_m_size; j++) {
-            map<int,GSWEdge>::iterator it2 = edgewalk[i].find(j);
-            if (it2!=edgewalk[i].end()) {
-                if (gsl_matrix_get(A,i,j)==0.0) {
-                    it2->second.deleted = 1;
-                    nodewalk[j].deleted = 1;
+        if (edgewalk.find(i)!=edgewalk.end()) {
+            for(int j=i+1; j<adj_m_size; j++) {
+                map<int,GSWEdge>::iterator it2 = edgewalk[i].find(j);
+                if (it2!=edgewalk[i].end()) {
+                    float v=gsl_matrix_get(A,i,j);
+                    if (v<1) {
+                        it2->second.deleted = 1;
+                        nodewalk[j].deleted = 1;
+                    }
                 }
             }
         }
     }
+
+    gsl_matrix_free(A);
     
 }
 
