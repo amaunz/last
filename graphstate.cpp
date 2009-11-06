@@ -359,7 +359,7 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
   // convert occurrence lists to weight maps with initial weight 1
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     set<InputNodeLabel> inl; inl.insert(fm::database->nodelabels[nodes[i].label].inputlabel);
-    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i } );
+    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i, 0 } );
   }
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
@@ -367,7 +367,7 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
       GraphState::GSEdge &edge = nodes[i].edges[j];
       if ( i < edge.tonode ) {
           set<InputEdgeLabel> iel; iel.insert((InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel);
-          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i } ;
+          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i, 0 } ;
       }
     }
   }
@@ -1999,15 +1999,114 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
 }
 
 void GSWalk::svd () {
-   gsl_matrix* A = gsl_matrix_calloc (edgewalk.size(), edgewalk.size());
-   gsl_matrix* U = gsl_matrix_calloc (edgewalk.size(), edgewalk.size());
-   gsl_vector* S = gsl_vector_calloc (edgewalk.size());
-   gsl_matrix* V = gsl_matrix_calloc (edgewalk.size(), edgewalk.size());
+    const float CUTOFF = 0.15; // Percentage of information to throw awayA
+    adj_m_size = nodewalk.size();
+    
+    gsl_matrix* A = gsl_matrix_calloc (adj_m_size, adj_m_size);
+    gsl_matrix* AS = gsl_matrix_calloc (adj_m_size, adj_m_size);
+    gsl_vector* s = gsl_vector_calloc (adj_m_size);
+    gsl_matrix* V = gsl_matrix_calloc (adj_m_size, adj_m_size);
 
+    // Init A
+    for (int i=0; i<adj_m_size; i++) { // init upper right
+        for(int j=i+1; j<adj_m_size; j++) {
+            map<int,GSWEdge>::iterator it2 = edgewalk[i].find(j);
+            if (it2!=edgewalk[i].end()) {
+                double count=0.0;
+                for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
+                    count += it3->second;
+                }
+                for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
+                    count += it3->second;
+                }
+                gsl_matrix_set(A,i,j,count);
+            }
+        }
+    }
+        gsl_matrix* A_tmp = gsl_matrix_calloc (adj_m_size, adj_m_size);
+    gsl_matrix_transpose_memcpy (A_tmp,A); // init lower left
+    gsl_matrix_add(A,A_tmp);
+        gsl_matrix_free(A_tmp);
 
+    // Init spur
+    gsl_matrix* spur = gsl_matrix_calloc (adj_m_size, adj_m_size);
+    for (int i=0; i<A->size1; i++) { 
+        for (int j=0; j<A->size2; j++) { 
+            if (gsl_matrix_get(A,i,j)!=0) gsl_matrix_set(spur,i,j,1);
+        }
+    }
 
-   gsl_matrix_free(A);
-   gsl_matrix_free(U);
-   gsl_vector_free(S);
-   gsl_matrix_free(V);
+    #ifdef DEBUG
+    if (fm::die) {
+        cout << fixed << setprecision(0)<< "A: " << endl;
+        for (int i=0; i<A->size1; i++) { 
+            for (int j=0; j<A->size2; j++) { 
+                cout << setw(4) << gsl_matrix_get(A,i,j) << " ";
+            }
+        cout << endl;
+        }
+    }
+    #endif
+
+    // SVD
+        gsl_vector* w = gsl_vector_calloc (adj_m_size);
+    gsl_linalg_SV_decomp (A,V,s,w);
+        gsl_vector_free(w);
+
+    // Determine CUTOFF in s
+    if (gsl_vector_get(s,0) == 0.0) adj_m_sing=1;
+        gsl_vector* s2 = gsl_vector_calloc (adj_m_size);
+    gsl_vector_memcpy (s2,s);
+    gsl_vector_mul (s2,s2);
+    int cut=adj_m_size-1; float s2_sum=0.0; for (;cut>=0;cut--) { s2_sum+=gsl_vector_get(s2,cut); if (gsl_vector_get(s2,cut)!=0) adj_m_rank++; } 
+        cut=adj_m_size-1; float s2_run=0.0; for (;cut>=0;cut--) { s2_run+=gsl_vector_get(s2,cut); if (((float)(s2_run/s2_sum))>CUTOFF) break; } cout << endl;
+    cutoff = (1.0-s2_run);
+        gsl_vector_free(s2);
+    #ifdef DEBUG
+    if (fm::die) 
+    cout << "CUT: " << cut+1 << " (" << adj_m_size << ")" << endl;
+    #endif
+
+    // Restore A
+        gsl_matrix* S = gsl_matrix_calloc(adj_m_size, adj_m_size);
+    for (int i=0; i<adj_m_size; i++) if (i<=cut) gsl_matrix_set(S,i,i,gsl_vector_get(s,i));
+    gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, A, S, 0.0, AS);
+        gsl_matrix_free(S);
+    gsl_matrix_transpose(V); gsl_blas_dgemm (CblasNoTrans, CblasNoTrans, 1.0, AS, V, 0.0, A);
+    gsl_matrix_mul_elements(A, spur);
+
+    #ifdef DEBUG
+    if (fm::die) {
+        cout << fixed << setprecision(0) << "ASV^T * spur: " << adj_m_rank << " (" << adj_m_size << ")" << endl;
+        for (int i=0; i<A->size1; i++) { 
+            for (int j=0; j<A->size2; j++) { 
+                cout << setw(4) << fabs(gsl_matrix_get(A,i,j)) << " ";
+            }
+        cout << endl;
+        }
+    }
+    #endif
+
+    gsl_matrix_free(spur);
+
+    gsl_matrix_free(A);
+    gsl_matrix_free(AS);
+    gsl_vector_free(s);
+    gsl_matrix_free(V);
+
+    // Compress graph representation
+    for (int i=0; i<adj_m_size; i++) { // init upper right
+        for(int j=i+1; j<adj_m_size; j++) {
+            map<int,GSWEdge>::iterator it2 = edgewalk[i].find(j);
+            if (it2!=edgewalk[i].end()) {
+                if (gsl_matrix_get(A,i,j)==0.0) {
+                    it2->second.deleted = 1;
+                    nodewalk[j].deleted = 1;
+                }
+            }
+        }
+    }
+    
 }
+
+

@@ -26,6 +26,8 @@
 #include <algorithm>
 
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
 
 #include "misc.h"
 #include "database.h"
@@ -131,6 +133,7 @@ struct GSWNode {
     set<InputNodeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
+    bool deleted;
     int stack(GSWNode n);
     friend ostream& operator<< (ostream &out, GSWNode* n);
 };
@@ -144,6 +147,7 @@ struct GSWEdge {
     set<InputEdgeLabel> labs;
     map<Tid, int> a;
     map<Tid, int> i;
+    bool deleted;
     int stack(GSWEdge e);
     static bool lt_to (GSWEdge& e1, GSWEdge& e2){
         if (e1.to < e2.to) return 1;
@@ -167,6 +171,10 @@ class GSWalk {
       vector<int> to_nodes_ex; // nodes that were inserted due to high IDs - must be overwritten
       bool activating;
       int hops;
+      float cutoff;
+      bool adj_m_sing;
+      int adj_m_rank;
+      int adj_m_size;
 
       int conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction, int ceiling=0);
       int stack (GSWalk* single, vector<int> core_ids);
@@ -180,7 +188,7 @@ class GSWalk {
       }
       friend ostream& operator<< (ostream &out, GSWalk* gsw);
 
-      GSWalk() : activating(0), hops(0) {
+      GSWalk() : activating(0), hops(0), cutoff(0.0), adj_m_sing(0), adj_m_rank(0), adj_m_size(0) {
         to_nodes_ex.clear();
       }
 };

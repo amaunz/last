@@ -891,7 +891,10 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl;exit(1); }
     if (nsign || gsw->activating!=siblingwalk->activating) { // empty sw needs no checks
-          if (siblingwalk->hops>1) cout << siblingwalk->hops << endl << siblingwalk ; 
+          if (siblingwalk->hops>1) {
+                siblingwalk->svd();
+                cout << endl << siblingwalk ; 
+          }
           delete siblingwalk;
           siblingwalk = new GSWalk();
     }
@@ -933,7 +936,10 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
                 #ifdef DEBUG
                 if (fm::die) cout << "STOP CRITERIUM at CHI " << cur_chisq << endl;
                 #endif
-                if (topdown->hops>1) cout << topdown->hops << topdown ;
+                if (topdown->hops>1) { 
+                    topdown->svd();
+                    cout << topdown;
+                }
             }
             // ELSE: MERGE TO SIBLINGWALK
             else {
@@ -1030,7 +1036,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
    
     if (gsw->edgewalk.size()) {
         gsw_counter++;
-        os << "t # " << gsw_counter << " " << gsw->activating << endl;
+        os << "t # " << gsw_counter << " " << gsw->activating << " " << gsw->hops << endl;
     }
 
     for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
@@ -1063,6 +1069,8 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
         }
         os << "}" ;
         #endif*/
+
+        if (it->deleted) os << "[D] ";
 
         os << endl;
     }
@@ -1103,6 +1111,8 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             }
             os << "}";
             //#endif*/
+
+            if (it2->second.deleted) os << "[D] ";
 
             os << endl;
         }

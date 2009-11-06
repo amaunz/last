@@ -544,7 +544,10 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 2.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
     if (nsign || gsw->activating!=siblingwalk->activating) {
-          if (siblingwalk->hops>1) cout << siblingwalk->hops << endl << siblingwalk;
+          if (siblingwalk->hops>1) {
+              siblingwalk->svd();
+              cout << siblingwalk;
+          }
           delete siblingwalk;
           siblingwalk = new GSWalk();
     }
@@ -585,7 +588,10 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
                   #ifdef DEBUG
                   if (fm::die) cout << "STOP CRITERIUM at CHI " << cur_chisq << endl;
                   #endif
-                  if (topdown->hops>1) cout << topdown->hops << endl << topdown; 
+                  if (topdown->hops>1) { 
+                      topdown->svd();
+                      cout << topdown; 
+                  }
               }
               // ELSE: MERGE TO SIBLINGWALK
               else {
@@ -656,7 +662,10 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 3.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
     if (nsign || gsw->activating!=siblingwalk->activating) {
-          if (siblingwalk->hops>1) cout << siblingwalk->hops << endl << siblingwalk;
+          if (siblingwalk->hops>1) {
+              siblingwalk->svd();
+              cout << siblingwalk;
+          }
           delete siblingwalk;
           siblingwalk = new GSWalk();
     }
@@ -698,7 +707,10 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
                   #ifdef DEBUG
                   if (fm::die) cout << "STOP CRITERIUM at CHI " << cur_chisq << endl;
                   #endif
-                  if (topdown->hops>1) cout << topdown->hops << endl << topdown; 
+                  if (topdown->hops>1) { 
+                      topdown->svd();
+                      cout << topdown; 
+                  }
               }
               // ELSE: MERGE TO SIBLINGWALK
               else {
@@ -781,7 +793,10 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 4.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
           if (nsign || gsw->activating!=siblingwalk->activating) {
-                if (siblingwalk->hops>1) cout << siblingwalk->hops << endl << siblingwalk;
+                if (siblingwalk->hops>1) {
+                    siblingwalk->svd();
+                    cout << siblingwalk;
+                }
                 delete siblingwalk;
                 siblingwalk = new GSWalk();
           }
@@ -822,7 +837,10 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
                         #ifdef DEBUG
                         if (fm::die) cout << "STOP CRITERIUM at CHI " << cur_chisq << endl;
                         #endif
-                        if (topdown->hops>1) cout << topdown->hops << endl << topdown; 
+                        if (topdown->hops>1) { 
+                            topdown->svd();
+                            cout << topdown; 
+                        }
                     }
                     // ELSE: MERGE TO SIBLINGWALK
                     else {
@@ -922,7 +940,10 @@ void Path::expand () {
       if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 1.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
       if (nsign || gsw->activating!=siblingwalk->activating) {
-            if (siblingwalk->hops>1) cout << siblingwalk->hops << endl << siblingwalk;
+            if (siblingwalk->hops>1) {
+                siblingwalk->svd();
+                cout << siblingwalk;
+            }
             delete siblingwalk;
             siblingwalk = new GSWalk();
       }
@@ -961,7 +982,10 @@ void Path::expand () {
                     #ifdef DEBUG
                     if (fm::die) cout << "STOP CRITERIUM at CHI " << cur_chisq << endl;
                     #endif
-                    if (topdown->hops>1) cout << topdown->hops << endl << topdown ;
+                    if (topdown->hops>1) { 
+                        topdown->svd();
+                        cout << topdown; 
+                    }
                 }
                 // ELSE: MERGE TO SIBLINGWALK
                 else {
