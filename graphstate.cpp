@@ -31,7 +31,6 @@ namespace fm {
     extern ChisqConstraint* chisq;
     extern bool console_out;
     extern bool gsp_out;
-    extern bool do_yaml;
     extern Database* database;
     extern GraphState* graphstate;
     extern int die;
@@ -423,74 +422,60 @@ void GraphState::print ( unsigned int frequency ) {
             print(stdout); 
         }
         else {
-          if (fm::do_yaml) {
-            putchar('-');
-            putchar(' ');
-            putchar('[');
-            putchar(' ');
-            putchar('"');
-          }
+          putchar('-');
+          putchar(' ');
+          putchar('[');
+          putchar(' ');
+          putchar('"');
           // output smarts 
           int i;
           for ( i = nodes.size()-1; i >= 0; i-- ) {   // edges
               if (nodes[i].edges.size()==1) break;
           }
           DfsOut(i, i);
-          if (fm::do_yaml) {
-            putchar('"');
-            putchar(',');
-            putchar(' ');
-          }
+          putchar('"');
+          putchar(',');
+          putchar(' ');
           // output chisq
           if (fm::chisq->active) {
-            if (fm::do_yaml) { printf("%.4f, ", fm::chisq->p); }
-            else putchar('\t');
+            printf("%.4f, ", fm::chisq->p);
           }
           // output freq
           if (fm::chisq->active) {
               if (frequency != (fm::chisq->fa+fm::chisq->fi)) { cerr << "Error: wrong counts! " << frequency << "!=" << fm::chisq->fa + fm::chisq->fi << "(" << fm::chisq->fa << "+" << fm::chisq->fi << ")" << endl; }
           }
           else { 
-              if (fm::do_yaml) { printf("%i", frequency); }
-              else { printf("%i\t", frequency); };
+              printf("%i", frequency);
           }
           // output occurrences
           if (fm::chisq->active) {
               putchar ('[');
               set<Tid>::iterator iter;
-              if (fm::do_yaml) {
-                  for (iter = fm::chisq->fa_set.begin(); iter != fm::chisq->fa_set.end(); iter++) {
-                      if (iter != fm::chisq->fa_set.begin()) putchar (',');
-                      putchar (' ');
-                      printf("%i", (*iter)); 
-                  }
-                  putchar (']');
-                  putchar (',');
+              for (iter = fm::chisq->fa_set.begin(); iter != fm::chisq->fa_set.end(); iter++) {
+                  if (iter != fm::chisq->fa_set.begin()) putchar (',');
                   putchar (' ');
-                  putchar ('[');
+                  printf("%i", (*iter)); 
               }
-              if (fm::do_yaml) {
-                  for (iter = fm::chisq->fi_set.begin(); iter != fm::chisq->fi_set.end(); iter++) {
-                      if (iter != fm::chisq->fi_set.begin()) putchar (',');
-                      printf(" %i", (*iter)); 
-                  }
+              putchar (']');
+              putchar (',');
+              putchar (' ');
+              putchar ('[');
+              for (iter = fm::chisq->fi_set.begin(); iter != fm::chisq->fi_set.end(); iter++) {
+                  if (iter != fm::chisq->fi_set.begin()) putchar (',');
+                  printf(" %i", (*iter)); 
               }
-              if (!fm::do_yaml) {
-                  set<Tid> ids;
-                  ids.insert(fm::chisq->fa_set.begin(), fm::chisq->fa_set.end());
-                  ids.insert(fm::chisq->fi_set.begin(), fm::chisq->fi_set.end());
-                  for (iter = ids.begin(); iter != ids.end(); iter++) {
-                      putchar(' ');
-                      printf("%i", (*iter)); 
-                  }
+              set<Tid> ids;
+              ids.insert(fm::chisq->fa_set.begin(), fm::chisq->fa_set.end());
+              ids.insert(fm::chisq->fi_set.begin(), fm::chisq->fi_set.end());
+              for (iter = ids.begin(); iter != ids.end(); iter++) {
+                  putchar(' ');
+                  printf("%i", (*iter)); 
               }
               putchar(' ');
               putchar(']');
           }
-          if (fm::do_yaml) { 
-            putchar(' ');
-            putchar(']');
-          }
+          putchar(' ');
+          putchar(']');
           if(fm::console_out) putchar('\n');
        }
     }
@@ -590,21 +575,20 @@ string GraphState::to_s ( unsigned int frequency ) {
         }
 
         else {
-          if (fm::do_yaml) oss.append ("- [ ");
+          oss.append ("- [ ");
 
           // output smarts 
-          if (fm::do_yaml) oss.append ("\"");
+          oss.append ("\"");
           int i;
           for ( i = nodes.size()-1; i >= 0; i-- ) {   // edges
               if (nodes[i].edges.size()==1) break;
           }
           DfsOut(i, oss, i);
-          if (fm::do_yaml) oss.append ("\", ");
-          else oss.append("\t");
+          oss.append ("\", ");
 
           // output chisq
           if (fm::chisq->active) {
-            if (fm::do_yaml) { char x[20]; sprintf(x,"%.4f", fm::chisq->p); (oss.append(x)).append(", "); }
+            char x[20]; sprintf(x,"%.4f", fm::chisq->p); (oss.append(x)).append(", ");
           }
 
           // output freq
@@ -623,45 +607,40 @@ string GraphState::to_s ( unsigned int frequency ) {
               set<Tid>::iterator iter;
               char x[20];
 
-              if (fm::do_yaml) {
-                  set<Tid>::iterator begin = fm::chisq->fa_set.begin();
-                  set<Tid>::iterator end = fm::chisq->fa_set.end();
-                  set<Tid>::iterator last = end; if (fm::chisq->fa_set.size()) last = --(fm::chisq->fa_set.end());
+              set<Tid>::iterator begin = fm::chisq->fa_set.begin();
+              set<Tid>::iterator end = fm::chisq->fa_set.end();
+              set<Tid>::iterator last = end; if (fm::chisq->fa_set.size()) last = --(fm::chisq->fa_set.end());
 
-                  for (iter = begin; iter != end; iter++) {
-                      if (iter != begin) oss.append (",");
-                      oss.append (" ");
-                      sprintf(x,"%i", (*iter)); oss.append (x);
-                      if ((last != end) && (iter == last)) oss.append (" ");
-                  }
-                  oss.append ("], [");
+              for (iter = begin; iter != end; iter++) {
+                  if (iter != begin) oss.append (",");
+                  oss.append (" ");
+                  sprintf(x,"%i", (*iter)); oss.append (x);
+                  if ((last != end) && (iter == last)) oss.append (" ");
+              }
+              oss.append ("], [");
 
-                  begin = fm::chisq->fi_set.begin();
-                  end = fm::chisq->fi_set.end();
-                  last = end; if (fm::chisq->fi_set.size()) last = --(fm::chisq->fi_set.end());
+              begin = fm::chisq->fi_set.begin();
+              end = fm::chisq->fi_set.end();
+              last = end; if (fm::chisq->fi_set.size()) last = --(fm::chisq->fi_set.end());
 
-                  for (iter = begin; iter != end; iter++) {
-                      if (iter != begin) oss.append (",");
-                      oss.append (" ");
-                      sprintf(x,"%i", (*iter)); oss.append (x);
-                      if ((last != end) && (iter == last)) oss.append (" ");
-                  }
+              for (iter = begin; iter != end; iter++) {
+                  if (iter != begin) oss.append (",");
+                  oss.append (" ");
+                  sprintf(x,"%i", (*iter)); oss.append (x);
+                  if ((last != end) && (iter == last)) oss.append (" ");
               }
 
-              if (!fm::do_yaml) {
-                  set<Tid> ids;
-                  ids.insert(fm::chisq->fa_set.begin(), fm::chisq->fa_set.end());
-                  ids.insert(fm::chisq->fi_set.begin(), fm::chisq->fi_set.end());
-                  for (iter = ids.begin(); iter != ids.end(); iter++) {
-                      sprintf(x,"%i", (*iter)); 
-                      (oss.append (" ")).append(x);
-                  }
+              set<Tid> ids;
+              ids.insert(fm::chisq->fa_set.begin(), fm::chisq->fa_set.end());
+              ids.insert(fm::chisq->fi_set.begin(), fm::chisq->fi_set.end());
+              for (iter = ids.begin(); iter != ids.end(); iter++) {
+                  sprintf(x,"%i", (*iter)); 
+                  (oss.append (" ")).append(x);
               }
-              if (!fm::do_yaml) oss.append (" ]");
-              else oss.append ("]");
+              oss.append (" ]");
           }
 
-          if (fm::do_yaml) oss.append (" ]");
+          oss.append (" ]");
 
           fm::console_out ? oss.append ("\n") : oss.append ("");
 
@@ -675,8 +654,7 @@ string GraphState::to_s ( unsigned int frequency ) {
   
 string GraphState::sep() {
     if (fm::gsp_out) return "#";
-    else if (fm::do_yaml) return "---";
-    else return " ";
+    else return "---";
 }
 
 void GraphState::undoState () {

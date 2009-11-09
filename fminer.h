@@ -27,11 +27,9 @@
 
 namespace fm { 
 
-    extern bool adjust_ub;
     extern bool do_pruning;
     extern bool aromatic;
     extern ChisqConstraint* chisq;
-    extern bool do_yaml;
     extern bool gsp_out;
     extern bool bbrc_sep;
     extern bool line_nrs;

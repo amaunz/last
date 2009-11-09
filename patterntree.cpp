@@ -24,16 +24,13 @@
 
 namespace fm {
     extern unsigned int minfreq;
-    extern bool do_backbone;
     extern bool updated;
-    extern bool adjust_ub;
     extern bool do_pruning;
     extern bool console_out;
     extern bool refine_singles;
     extern bool do_output;
     extern bool bbrc_sep;
     extern bool most_specific_trees_only;
-    extern bool do_yaml;
     extern bool gsp_out;
     extern int die;
     extern bool do_last;
@@ -872,7 +869,6 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     #endif
 
     #ifdef DEBUG
-    fm::do_yaml=true;
     fm::gsp_out=false;
     string s = fm::graphstate->to_s(legs[i]->occurrences.frequency);
     bool diehard=0;
@@ -909,7 +905,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
 
     
     // RECURSE
-    if ( ( !fm::do_pruning ||  (  !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) ) &&
+    if ( ( !fm::do_pruning ||  (  fm::chisq->u >= fm::chisq->sig) ) &&
          (  fm::refine_singles || (legs[i]->occurrences.frequency>1) )
        ) {
         PatternTree p ( *this, i );

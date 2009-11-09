@@ -30,8 +30,7 @@ Fminer::Fminer() : init_mining_done(false) {
       Reset();
       Defaults();
       fm::instance_present=true;
-      if (getenv("FMINER_LAZAR")) fm::do_yaml = false;
-      if (getenv("FMINER_SMARTS")) fm::gsp_out = false; 
+      fm::gsp_out = false; 
   }
   else {
     cerr << "Error! Cannot create more than 1 instance." << endl; 
@@ -47,8 +46,7 @@ Fminer::Fminer(int _type, unsigned int _minfreq) : init_mining_done(false) {
       SetType(_type);
       SetMinfreq(_minfreq);
       fm::instance_present=true;
-      if (getenv("FMINER_LAZAR")) fm::do_yaml = false;
-      if (getenv("FMINER_SMARTS")) fm::gsp_out = false; 
+      fm::gsp_out = false; 
   }
   else {
     cerr << "Error! Cannot create more than 1 instance." << endl; 
@@ -65,10 +63,8 @@ Fminer::Fminer(int _type, unsigned int _minfreq, float _chisq_val, bool _do_back
       SetType(_type);
       SetMinfreq(_minfreq);
       SetChisqSig(_chisq_val);
-      SetBackbone(_do_backbone);
       fm::instance_present=true;
-      if (getenv("FMINER_LAZAR")) fm::do_yaml = false;
-      if (getenv("FMINER_SMARTS")) fm::gsp_out = false; 
+      fm::gsp_out = false; 
 
   }
   else {
@@ -111,8 +107,6 @@ void Fminer::Reset() {
     fm::closelegoccurrences = new CloseLegOccurrences();
     fm::legoccurrences = new LegOccurrences();
 
-    fm::candidatelegsoccurrences.clear();
-    fm::candidatecloselegsoccs.clear();
     fm::candidatecloselegsoccsused.clear();
 
     SetChisqActive(true); 
@@ -125,8 +119,6 @@ void Fminer::Reset() {
 void Fminer::Defaults() {
     fm::minfreq = 2;
     fm::type = 2;
-    fm::do_backbone = true;
-    fm::adjust_ub = true;
     fm::do_pruning = true;
     fm::console_out = false;
     fm::aromatic = false;
@@ -140,7 +132,6 @@ void Fminer::Defaults() {
     fm::last_hops=0;
 
     fm::updated = true;
-    fm::do_yaml=true;
     fm::gsp_out=true;
     fm::die = 0;
 }
@@ -150,8 +141,8 @@ void Fminer::Defaults() {
 
 int Fminer::GetMinfreq(){return fm::minfreq;}
 int Fminer::GetType(){return fm::type;}
-bool Fminer::GetBackbone(){return fm::do_backbone;}
-bool Fminer::GetDynamicUpperBound(){return fm::adjust_ub;}
+bool Fminer::GetBackbone(){return false;}
+bool Fminer::GetDynamicUpperBound(){return false;}
 bool Fminer::GetPruning() {return fm::do_pruning;}
 bool Fminer::GetConsoleOut(){return fm::console_out;}
 bool Fminer::GetAromatic() {return fm::aromatic;}
@@ -179,31 +170,10 @@ void Fminer::SetType(int val) {
 }
 
 void Fminer::SetBackbone(bool val) {
-    if (val && !GetChisqActive()) {
-        cerr << "Warning! BBRC mining could not be enabled due to deactivated significance criterium." << endl;
-    }
-    else {  
-        if (!val && GetDynamicUpperBound()) {
-            cerr << "Notice: Disabling dynamic upper bound pruning due to switched-off BBRC mining." << endl;
-            SetDynamicUpperBound(false);
-        }
-        fm::do_backbone = val;
-    }
 }
 
 void Fminer::SetDynamicUpperBound(bool val) {
-    if (val && !GetBackbone()) {
-        cerr << "Warning! Dynamic upper bound pruning could not be enabled due to disabled BBRC mining." << endl;
-    }
-    else if (val && !GetChisqActive()) {
-        cerr << "Warning! Dynamic upper bound pruning could not be enabled due to deactivated significance criterium." << endl;
-    }
-    else if (val && !GetPruning()) {
-        cerr << "Warning! Dynamic upper bound pruning could not be enabled due to deactivated statistical metric pruning." << endl;
-    }
-    else {
-        fm::adjust_ub=val; 
-    }
+      // DO NOT USE Dyn UB IN ANY CASE
 }
 
 void Fminer::SetPruning(bool val) {
@@ -299,7 +269,7 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
         fm::database->reorder (); 
         initLegStatics (); 
         fm::graphstate->init (); 
-        if (fm::bbrc_sep && !fm::do_backbone && fm::do_output && !fm::console_out) (*fm::result) << fm::graphstate->sep();
+        if (fm::bbrc_sep && fm::do_output && !fm::console_out) (*fm::result) << fm::graphstate->sep();
         init_mining_done=true; 
         cerr << "Settings:" << endl \
              << "---" << endl \

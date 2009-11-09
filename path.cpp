@@ -28,9 +28,7 @@
 
 namespace fm {
     extern unsigned int minfreq;
-    extern bool adjust_ub;
     extern bool do_pruning;
-    extern bool do_backbone;
     extern bool updated;
     extern int type;
     extern bool console_out;
@@ -38,7 +36,6 @@ namespace fm {
     extern bool do_output;
     extern bool bbrc_sep;
     extern bool most_specific_trees_only;
-    extern bool do_yaml;
     extern bool gsp_out;
     extern bool die;
     extern bool do_last;
@@ -522,7 +519,6 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     // immediate output
 
     #ifdef DEBUG
-    fm::do_yaml=true;
     fm::gsp_out=false;
     string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
     if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
@@ -561,7 +557,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 2.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
     // RECURSE
-    if ( ( !fm::do_pruning || ( !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) ) &&
+    if ( ( !fm::do_pruning || (fm::chisq->u >= fm::chisq->sig) ) &&
          (  fm::refine_singles || (legs[index]->occurrences.frequency>1) )
        ) {   // UB-PRUNING
             Path path ( *this, index );
@@ -680,7 +676,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
  
 
     // RECURSE
-    if ( ( !fm::do_pruning || ( !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) ) &&
+    if ( ( !fm::do_pruning || (fm::chisq->u >= fm::chisq->sig) ) &&
          (  fm::refine_singles || (legs[index]->occurrences.frequency>1) )
        ) {   // UB-PRUNING
             Path path ( *this, index );
@@ -740,7 +736,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
   bool uptmp = fm::updated;
 
-  if (fm::bbrc_sep && !fm::do_backbone && legs.size() > 0) {
+  if (fm::bbrc_sep && legs.size() > 0) {
       if (fm::do_output && !fm::console_out && fm::result->size() && (fm::result->back()!=fm::graphstate->sep())) (*fm::result) << fm::graphstate->sep();
   }
 
@@ -771,7 +767,6 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           #endif
 
           #ifdef DEBUG
-          fm::do_yaml=true;
           fm::gsp_out=false;
           string s = fm::graphstate->to_s(legs[i]->occurrences.frequency);
           bool diehard=0;
@@ -810,7 +805,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
           if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 4.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
 
-          if ( ( !fm::do_pruning ||  (  !fm::adjust_ub && (fm::chisq->u >= fm::chisq->sig) ) ) &&
+          if ( ( !fm::do_pruning ||  (fm::chisq->u >= fm::chisq->sig ) ) &&
                (  fm::refine_singles || (legs[i]->occurrences.frequency>1) )
              ) {
               PatternTree tree ( *this, i );
