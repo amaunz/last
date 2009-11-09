@@ -311,6 +311,10 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
              << "Refine patterns with single support: " << GetRefineSingles() << endl \
              << "Most specific BBRC members: " << GetMostSpecTreesOnly() << endl \
              << "---" << endl;
+        cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl << endl;
+        cout << "<!-- LAtent STructure Mining (LAST) descriptors-->" << endl << endl;
+        cout << "<patternlist>" << endl;
+        
     }
     if (j >= fm::database->nodelabels.size()) { cerr << "Error! Root node does not exist." << endl;  exit(1); }
     if ( fm::database->nodelabels[j].frequency >= fm::minfreq && fm::database->nodelabels[j].frequentedgelabels.size () ) {
@@ -318,6 +322,7 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
         path.expand(); // mining step
     }
     return fm::result;
+        cout << "</patternlist>" << endl;
 }
 
 void Fminer::ReadGsp(FILE* gsp){

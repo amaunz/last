@@ -1035,93 +1035,86 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
     static int gsw_counter=0;
    
     if (gsw->edgewalk.size()) {
+        os << "    <pattern>" << endl << endl;
         gsw_counter++;
-        os << "t # " << gsw_counter << " " << gsw->activating << " " << gsw->hops << endl;
+        os << "        <id>" << gsw_counter << "</id>" << endl;
+        os << "        <activating>" << gsw->activating << "</activating>" << endl;
+        os << "        <hops>" << gsw->hops << "</hops>" << endl << endl;
     }
 
+    os << "        <nodes>" << endl;
     for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
-        os << distance(gsw->nodewalk.begin(), it);
-        os << " < ";
+        os << "            <node>" << endl;
+        os << "            <id>" << distance(gsw->nodewalk.begin(), it) << "</id>" << endl;
+        os << "            <labels>" << endl;
         for (set<InputNodeLabel>::iterator it2=it->labs.begin(); it2!=it->labs.end(); it2++) {
-            os << *it2 << " ";
+            os << "                <label>" << *it2 << "</label>" << endl;
         }
-        os << ">";
+        os << "            </labels>" << endl;
 
         int count=0;
+        os << "            <active_occurrences>" << endl;
         for (map<Tid, int>::iterator it2=it->a.begin(); it2!=it->a.end(); it2++) {
+            os << "                <occurrence tid=\"" << it2->first << "\" weight=\"" << it2->second << "\"/> " << endl;
             count = count + it2->second;
         }
+        os << "            </active_occurrences>" << endl;
+
+        os << "            <inactive_occurrences>" << endl;
         for (map<Tid, int>::iterator it2=it->i.begin(); it2!=it->i.end(); it2++) {
+            os << "                <occurrence tid=\"" << it2->first << "\" weight=\"" << it2->second << "\"/> " << endl;
             count = count + it2->second;
         }
-        os << " " << count;
+        os << "            </inactive_occurrences>" << endl;
+        os << "            <weight>" << count << "</weight>" << endl;
 
-        /*#ifdef DEBUG 
-        os << " { ";
-        for (map<Tid, int>::iterator it2=it->a.begin(); it2!=it->a.end(); it2++) {
-            os << it2->first << "->" << it2->second << " ";
-        }
-        os << "}";
-
-        os << " { ";
-        for (map<Tid, int>::iterator it2=it->i.begin(); it2!=it->i.end(); it2++) {
-            os << it2->first << "->" << it2->second << " ";
-        }
-        os << "}" ;
-        #endif*/
-
-        if (it->deleted) os << " [D] ";
-
-        os << endl;
+        os << "            <deleted>" << it->deleted << "</deleted>" << endl;
+        os << "            <optional>" << it->optional << "</optional>" << endl;
+        os << "            </node>" << endl;
     }
+    os << "        </nodes>" << endl << endl;
 
+    os << "        <edges>" << endl;
     for (map<int, map<int, GSWEdge> >::iterator it=gsw->edgewalk.begin(); it!=gsw->edgewalk.end(); it++) {
-        if (!it->second.size()) os << it->first << endl;
 
         for(map<int,GSWEdge>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+            os << "            <edge>" << endl;
 
             // from and to
-            os << it->first << " " << it2->first; 
-
-            os << " < ";
+            os << "            <from>" << it->first << "</from>" << endl 
+               << "            <to>" << it2->first << "</to>" << endl;
+            
+            os << "            <labels>" << endl;
             for (set<InputEdgeLabel>::iterator it3=it2->second.labs.begin(); it3!=it2->second.labs.end(); it3++) {
-                os << *it3 << " ";
+                os << "                <label>" << *it3 << "</label>" << endl;
             }
-            os << ">";
+            os << "            </labels>" << endl;
 
             int count=0;
+            os << "            <active_occurrences>" << endl;
             for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
+                os << "                <occurrence tid=\"" << it3->first << "\" weight=\"" << it3->second << "\"/> " << endl;
                 count = count + it3->second;
             }
+            os << "            </active_occurrences>" << endl;
+
+            os << "            <inactive_occurrences>" << endl;
             for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
+                os << "                <occurrence tid=\"" << it3->first << "\" weight=\"" << it3->second << "\"/> " << endl;
                 count = count + it3->second;
             }
-            os << " " << count;
-
-            /*#ifdef DEBUG 
-            os << " { ";
-            for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
-                os << it3->first << "->" << it3->second << " ";
-            }
-            os << "}";
-
-            os << " { ";
-            for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
-                os << it3->first << "->" << it3->second << " ";
-            }
-            os << "}";
-            //#endif*/
-
-            if (it2->second.deleted || it2->second.optional) os << " [";
-            if (it2->second.optional>0) os << it2->second.optional;
-            if (it2->second.deleted) os << "D";
-            if (it2->second.deleted || it2->second.optional) os << "] ";
-
-            os << endl;
+            os << "            </inactive_occurrences>" << endl;
+            os << "            <weight>" << count << "</weight>" << endl;
+           
+            os << "            <deleted>" << it2->second.deleted << "</deleted>" << endl;
+            os << "            <optional>" << it2->second.optional << "</optional>" << endl;
+            os << "            </edge>" << endl;
         }
     }
+    os << "        </edges>" << endl << endl;
 
     if (gsw->edgewalk.size()) {
+        os << "    </pattern>" << endl;
         os << endl;
     }
     return os;
