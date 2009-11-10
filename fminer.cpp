@@ -281,18 +281,44 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
              << "Refine patterns with single support: " << GetRefineSingles() << endl \
              << "Most specific BBRC members: " << GetMostSpecTreesOnly() << endl \
              << "---" << endl;
-        cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl << endl;
+
+        cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
+        cout << "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xmlns:lab=\"http://www.maunz.de/xml\"\n    xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n     graphml+labellist.xsd\">" << endl << endl;
+
         cout << "<!-- LAtent STructure Mining (LAST) descriptors-->" << endl << endl;
-        cout << "<patternlist>" << endl;
-        
+
+        /*
+        cout << "<key id=\"act\" for=\"graph\" attr.name=\"activating\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
+        cout << "<key id=\"hops\" for=\"graph\" attr.name=\"hops\" attr.type=\"int\">\n    <default>0</default>\n</key>" << endl;
+        cout << "<key id=\"weight_n\" for=\"node\" attr.name=\"node_weight\" attr.type=\"int\">\n    <default>0</default>\n</key>" << endl;
+        cout << "<key id=\"weight_e\" for=\"edge\" attr.name=\"edge_weight\" attr.type=\"int\">\n    <default>0</default>\n</key>" << endl;
+        cout << "<key id=\"del_n\" for=\"node\" attr.name=\"node_deleted\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
+        cout << "<key id=\"del_e\" for=\"edge\" attr.name=\"edge_deleted\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
+        cout << "<key id=\"opt_n\" for=\"node\" attr.name=\"node_optional\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
+        cout << "<key id=\"opt_e\" for=\"edge\" attr.name=\"edge_optional\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
+        cout << "<key id=\"lab_n\" for=\"node\">\n    <default></default>\n</key>" << endl;
+        cout << "<key id=\"lab_e\" for=\"edge\">\n    <default></default>\n</key>" << endl;
+        */
+        cout << "<key id=\"act\" for=\"graph\" attr.name=\"activating\" attr.type=\"boolean\" />" << endl;
+        cout << "<key id=\"hops\" for=\"graph\" attr.name=\"hops\" attr.type=\"int\" />" << endl;
+        cout << "<key id=\"weight_n\" for=\"node\" attr.name=\"node_weight\" attr.type=\"int\" />" << endl;
+        cout << "<key id=\"weight_e\" for=\"edge\" attr.name=\"edge_weight\" attr.type=\"int\" />" << endl;
+        cout << "<key id=\"del_n\" for=\"node\" attr.name=\"node_deleted\" attr.type=\"boolean\" />" << endl;
+        cout << "<key id=\"del_e\" for=\"edge\" attr.name=\"edge_deleted\" attr.type=\"boolean\" />" << endl;
+        cout << "<key id=\"opt_n\" for=\"node\" attr.name=\"node_optional\" attr.type=\"boolean\" />" << endl;
+        cout << "<key id=\"opt_e\" for=\"edge\" attr.name=\"edge_optional\" attr.type=\"boolean\" />" << endl;
+        cout << "<key id=\"lab_n\" for=\"node\" />" << endl;
+        cout << "<key id=\"lab_e\" for=\"edge\" />" << endl;
+
+
     }
     if (j >= fm::database->nodelabels.size()) { cerr << "Error! Root node does not exist." << endl;  exit(1); }
     if ( fm::database->nodelabels[j].frequency >= fm::minfreq && fm::database->nodelabels[j].frequentedgelabels.size () ) {
         Path path(j);
         path.expand(); // mining step
     }
+    if (j==GetNoRootNodes()-1) cout << "</graphml>" << endl;
     return fm::result;
-        cout << "</patternlist>" << endl;
 }
 
 void Fminer::ReadGsp(FILE* gsp){
