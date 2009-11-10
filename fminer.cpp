@@ -307,8 +307,10 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
         cout << "<key id=\"del_e\" for=\"edge\" attr.name=\"edge_deleted\" attr.type=\"boolean\" />" << endl;
         cout << "<key id=\"opt_n\" for=\"node\" attr.name=\"node_optional\" attr.type=\"boolean\" />" << endl;
         cout << "<key id=\"opt_e\" for=\"edge\" attr.name=\"edge_optional\" attr.type=\"boolean\" />" << endl;
-        cout << "<key id=\"lab_n\" for=\"node\" />" << endl;
-        cout << "<key id=\"lab_e\" for=\"edge\" />" << endl;
+        cout << "<key id=\"lab_n\" for=\"node\" attr.name=\"node_labels\" attr.type=\"string\" />" << endl;
+        cout << "<key id=\"lab_e\" for=\"edge\" attr.name=\"edge_labels\" attr.type=\"string\" />" << endl;
+        cout << "<key id=\"lablst_n\" for=\"node\" />" << endl;
+        cout << "<key id=\"lablst_e\" for=\"edge\" />" << endl;
 
 
     }

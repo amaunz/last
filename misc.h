@@ -24,6 +24,7 @@
 #include <vector>
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -99,5 +100,11 @@ inline vector<string>& operator<<(vector<string>& res, string s) {
 };
 
 
+template <class T>
+inline std::string to_string (const T& t) {
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
+}
 
 #endif
