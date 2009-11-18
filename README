@@ -1,21 +1,23 @@
-Welcome to LibFminer.
+Welcome to LAST (LAtent STructure Pattern Mining).
 
-This is the Fminer library, available from http://github.com/amaunz/libfminer/tree/master.
+This is the LAST library, available from http://github.com/amaunz/last/tree/master.
 The Fminer application that uses this library is available from http://github.com/amaunz/fminer/tree/master.
-The official website with documentation is http://www.maunz.de/libfminer-doc .
+Utilities for chemical application of LAST are available from http://github.com/amaunz/last-utils/tree/master.
+The official website with documentation is .
+
+USAGE:
+Refer to http://www.maunz.de/libfminer-doc for usage information until a complete manual for LAST is available.
+Installation is completely the same. Set the LD_LIBRARY_PATH variable to the directory where LAST is installed, e.g.:
+$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/last
+Note: for LAST, the switches -d -b -r are defunct.
+
+EXAMPLE:
+Mine LAST descriptors and convert output to SMARTS (see LAST README file how to use the fminer frontend binary for LAST):
+./fminer -f14 ../cpdbdata/salmonella_mutagenicity/salmonella_mutagenicity_alt.smi ../cpdbdata/salmonella_mutagenicity/salmonella_mutagenicity_alt.class > salm-last.graphml
 
 For installation and documentation see INSTALL.
 For license information see LICENSE.
 
 Abstract:
-We present a new approach to large-scale graph mining based on so-called backbone refinement classes.
-The method efficiently mines tree-shaped subgraph descriptors under minimum frequency and significance constraints, using classes of fragments to reduce feature set size and running times.
-The classes are defined in terms of fragments sharing a common backbone.
-The method is able to optimize structural inter-feature entropy as opposed to occurrences, which is characteristic for open or closed fragment mining.
-In the experiments, the proposed method reduces feature set sizes by >90 % and >30 % compared to  complete tree mining and open tree mining, respectively.
-Evaluation using crossvalidation runs shows that their classification accuracy is similar to the complete set of trees but significantly better than that of open trees. 
-Compared to open or closed fragment mining, a large part of the search space can be pruned due to an improved statistical constraint (dynamic upper bound adjustment), which is also confirmed in the experiments in lower running times compared to ordinary (static) upper bound pruning. 
-Further analysis using large-scale datasets yields insight into important properties of the proposed descriptors, such as the dataset coverage and the class size represented by each descriptor. 
-A final cross-validation run confirms that the novel descriptors render large training sets feasible which previously might have been intractable.
 
-Andreas Maunz, 2008
+Andreas Maunz, 2009

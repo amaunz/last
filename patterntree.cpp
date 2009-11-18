@@ -1039,17 +1039,17 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
 
     for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
         os << "        <node id=\"" << distance(gsw->nodewalk.begin(), it) << "\">" << endl;
-        os << "            <data key=\"lablst_n\">" << endl;
-        os << "                <lab:intvalues>";
+        //os << "            <data key=\"lablst_n\">" << endl;
+        //os << "                <lab:intvalues>";
         string labels;
         for (set<InputNodeLabel>::iterator it2=it->labs.begin(); it2!=it->labs.end(); it2++) {
-            if (it2!=it->labs.begin()) os << " ";
-            os << *it2;
+            //if (it2!=it->labs.begin()) os << " ";
+            //os << *it2;
             if (it2!=it->labs.begin()) labels.append(" ");
             labels.append(to_string(*it2));
         }
-        os << "</lab:intvalues>" << endl;
-        os << "            </data>" << endl;
+        //os << "</lab:intvalues>" << endl;
+        //os << "            </data>" << endl;
         os << "            <data key=\"lab_n\">" << labels << "</data>" << endl;
 
         int count=0;
@@ -1079,17 +1079,17 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             os << "        <edge source=\"" << it->first << "\" target=\"" << it2->first << "\">" << endl;
 
             // from and to
-            os << "            <data key=\"lablst_e\">" << endl;
-            os << "                <lab:intvalues>";
+            //os << "            <data key=\"lablst_e\">" << endl;
+            //os << "                <lab:intvalues>";
             string labels;
             for (set<InputEdgeLabel>::iterator it3=it2->second.labs.begin(); it3!=it2->second.labs.end(); it3++) {
-                if (it3!=it2->second.labs.begin()) os << " ";
-                os << *it3;
+                //if (it3!=it2->second.labs.begin()) os << " ";
+                //os << *it3;
                 if (it3!=it2->second.labs.begin()) labels.append(" ");
                 labels.append(to_string(*it3));
             }
-            os << "</lab:intvalues>" << endl;
-            os << "            </data>" << endl;
+            //os << "</lab:intvalues>" << endl;
+            //os << "            </data>" << endl;
             os << "            <data key=\"lab_e\">" << labels << "</data>" << endl;
 
             int count=0;

@@ -283,7 +283,7 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
              << "---" << endl;
 
         cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
-        cout << "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xmlns:lab=\"http://www.maunz.de/xml\"\n    xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns\n     graphml+labellist.xsd\">" << endl << endl;
+        cout << "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xsi:noNamespaceSchemaLocation=\"graphml.xsd\">" << endl << endl;
 
         cout << "<!-- LAtent STructure Mining (LAST) descriptors-->" << endl << endl;
 
@@ -309,8 +309,6 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
         cout << "<key id=\"opt_e\" for=\"edge\" attr.name=\"edge_optional\" attr.type=\"boolean\" />" << endl;
         cout << "<key id=\"lab_n\" for=\"node\" attr.name=\"node_labels\" attr.type=\"string\" />" << endl;
         cout << "<key id=\"lab_e\" for=\"edge\" attr.name=\"edge_labels\" attr.type=\"string\" />" << endl;
-        cout << "<key id=\"lablst_n\" for=\"node\" />" << endl;
-        cout << "<key id=\"lablst_e\" for=\"edge\" />" << endl;
 
 
     }
