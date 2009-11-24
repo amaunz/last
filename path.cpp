@@ -424,7 +424,9 @@ bool Path::is_normal ( EdgeLabel edgelabel ) {
 
 
 
-GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
+GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
+
+  assert(parent_size>0);
 
   fm::statistics->patternsize++;
   if ( (unsigned) fm::statistics->patternsize > fm::statistics->frequenttreenumbers.size () ) {
@@ -488,9 +490,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
 
   vector<int> core_ids; 
   for (int j=0; j<parent_size; j++) core_ids.push_back(j);
-
   int legcnt=0;
-
   
   // Grow Path forw
   for (unsigned int j=0; j<forwpathlegs.size() ; j++ ) {
@@ -499,7 +499,6 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     GSWalk* gsw = new GSWalk();
     GSWalk* topdown = NULL;
 
-    int gsw_size=0;
     bool nsign=1;
 
     #ifdef DEBUG
@@ -521,7 +520,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     #ifdef DEBUG
     fm::gsp_out=false;
     string s = fm::graphstate->to_s(legs[index]->occurrences.frequency);
-    if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
+    //if (s.find("C-C=C-O-C-N")!=string::npos) { fm::die=1; diehard=1; }
     fm::die=1;
     #endif
    
@@ -530,11 +529,11 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
         map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); }
         fm::graphstate->print(gsw, weightmap_a, weightmap_i);
         gsw->activating=fm::chisq->activating;
-        gsw_size=gsw->nodewalk.size();
         if (cur_chisq >= fm::chisq->sig) {
             nsign=0;
         }
     }
+    const int gsw_size=gsw->nodewalk.size();
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 2.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -551,7 +550,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw 1" << endl;
         #endif
-        gsw->conflict_resolution(core_ids, siblingwalk, 0);
+        int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
     }
 
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 2.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -591,7 +590,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               }
               // ELSE: MERGE TO SIBLINGWALK
               else {
-                  topdown->conflict_resolution(core_ids, siblingwalk, 0);
+                  int res=topdown->conflict_resolution(core_ids, siblingwalk, 1);
               }
               if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 2.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; each_it(topdown->to_nodes_ex, vector<int>::iterator) cout << *it << " "; cout << endl;  exit(1); }
 
@@ -630,7 +629,6 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
     GSWalk* gsw = new GSWalk();
     GSWalk* topdown = NULL;
 
-    int gsw_size=0;
     bool nsign=1;
 
     // Calculate chisq
@@ -648,11 +646,11 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
         map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); }
         fm::graphstate->print(gsw, weightmap_a, weightmap_i);
         gsw->activating=fm::chisq->activating;
-        gsw_size=gsw->nodewalk.size();
         if (cur_chisq >= fm::chisq->sig) {
             nsign=0;
         }
     }
+    const int gsw_size=gsw->nodewalk.size();
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 3.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -669,7 +667,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw 2" << endl;
         #endif
-        gsw->conflict_resolution(core_ids, siblingwalk, 0);
+        int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
     }
 
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 3.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -710,7 +708,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               }
               // ELSE: MERGE TO SIBLINGWALK
               else {
-                  topdown->conflict_resolution(core_ids, siblingwalk, 0); 
+                  int res=topdown->conflict_resolution(core_ids, siblingwalk, 1); 
               }
               if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 3.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
@@ -755,7 +753,6 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
           GSWalk* gsw = new GSWalk();
           GSWalk* topdown = NULL;
 
-          int gsw_size=0;
           bool nsign=1;
 
           if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
@@ -778,11 +775,11 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); }
               fm::graphstate->print(gsw, weightmap_a, weightmap_i);
               gsw->activating=fm::chisq->activating;
-              gsw_size=gsw->nodewalk.size();
               if (cur_chisq >= fm::chisq->sig) {
                   nsign=0;
               }
           }
+          const int gsw_size=gsw->nodewalk.size();
 
           // !STOP: MERGE TO SIBLINGWALK
           if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 4.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -799,7 +796,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
               #ifdef DEBUG
               if (fm::die) cout << "CR gsw 3" << endl;
               #endif
-              gsw->conflict_resolution(core_ids, siblingwalk, 0);
+              int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
           }
 
 
@@ -839,7 +836,7 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
                     }
                     // ELSE: MERGE TO SIBLINGWALK
                     else {
-                        topdown->conflict_resolution(core_ids, siblingwalk, 0); 
+                        int res=topdown->conflict_resolution(core_ids, siblingwalk, 1);
                     }
                     if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 4.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
@@ -875,11 +872,9 @@ GSWalk* Path::expand2 (pair<float,string> max, int parent_size) {
   }
 
   // delete horizontal view
-  return siblingwalk;
   fm::updated=uptmp;
   fm::statistics->patternsize--;
-
-
+  return siblingwalk;
 
 //  cerr << "backtracking p" << endl;
 }
@@ -896,7 +891,7 @@ void Path::expand () {
   // horizontal view: conflict_resolution will merge into siblingwalk
   // NOTE: siblingwalk is intended to 'carry' the growing meta pattern
   GSWalk* siblingwalk = new GSWalk();
-  vector<int> core_ids (0, 1);
+  vector<int> core_ids; core_ids.push_back(0); core_ids.push_back(1);
   int legcnt=0;
 
   for ( unsigned int i = 0; i < legs.size (); i++ ) {
@@ -904,7 +899,6 @@ void Path::expand () {
     GSWalk* gsw = new GSWalk(); 
     GSWalk* topdown = NULL;
 
-    int gsw_size=0;
     bool nsign=1;
 
     PathTuple &tuple = legs[i]->tuple;
@@ -919,17 +913,16 @@ void Path::expand () {
       fm::graphstate->print(legs[i]->occurrences.frequency);
       #endif
 
-
-      if (!fm::chisq->active || fm::chisq->p >= fm::chisq->sig) {
+      if (fm::chisq->active) {
           map<Tid, int> weightmap_a; each_it(fm::chisq->fa_set, set<Tid>::iterator) { weightmap_a.insert(make_pair((*it),1)); }
           map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); }
           fm::graphstate->print(gsw, weightmap_a, weightmap_i);
           gsw->activating=fm::chisq->activating;
-          gsw_size=gsw->nodewalk.size();
           if (cur_chisq >= fm::chisq->sig) {
               nsign=0;
           }
       }
+      const int gsw_size=gsw->nodewalk.size();
 
       // !STOP: MERGE TO SIBLINGWALK
       if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 1.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -946,7 +939,7 @@ void Path::expand () {
           #ifdef DEBUG
           if (fm::die) cout << "CR gsw 4" << endl;
           #endif
-          gsw->conflict_resolution(core_ids, siblingwalk, 0);
+          int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
       }
 
       if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 1.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -984,7 +977,7 @@ void Path::expand () {
                 }
                 // ELSE: MERGE TO SIBLINGWALK
                 else {
-                    topdown->conflict_resolution(core_ids, siblingwalk, 0); 
+                    int res=topdown->conflict_resolution(core_ids, siblingwalk, 1); 
                 }
                 if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 1.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 

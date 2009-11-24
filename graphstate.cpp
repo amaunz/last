@@ -1339,8 +1339,9 @@ void GraphState::puti ( FILE *f, int i ) {
 
 //! s-sided stack of two features by walking core ids
 //  NOTE: s is intended to 'carry' the growing meta pattern
-//  direction 0: s takes precedence
-int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction, int ceiling) {
+//  add_hops=1: used for topdown merging to incorporate hops from topdown into s
+int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops, int ceiling) {
+
 
     // sanity check: core
     if (core_ids.size()>0) {
@@ -1584,7 +1585,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                 bool insertion_done = 0;
                 if (it21 != einsert21.end()) {
                     // equal: direction should be 0 (siblingwalk dominance), so we merge from left to right and from top to down (in this order)
-                    if ( (it12 == einsert12.end()) || (it21->first < it12->first) || (!direction && (it21->first == it12->first)) ) { 
+                    if ( (it12 == einsert12.end()) || (it21->first < it12->first) || (it21->first == it12->first) ) { 
                         if (it21->second.size()>1) { cerr << "Error! More than one edge to the same node (21)." << endl; exit(1); }
                         // to node is out of range: re-insert index for next round
                         if (it21->first > nodewalk.size()) {
@@ -1614,7 +1615,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                     }
                 }
                 if (it12 != einsert12.end()) {
-                    if ( (it21 == einsert21.end()) ||  (it12->first < it21->first) || (direction && (it21->first == it12->first)) ) {
+                    if ( (it21 == einsert21.end()) ||  (it12->first < it21->first) ) {
                         if (it12->second.size()>1) { cerr << "Error! More than one edge to the same node (12)." << endl; exit(1); }
                         if (it12->first > s->nodewalk.size()) {
                             cerr << "Error! 12: to-node '" << it12->first << "' is out of bound." << endl; exit(1);
@@ -1653,7 +1654,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
                     cout << endl << endl << endl << "STARTING CEILING MODE next_to: '" << next_to << "' c: '" << c << "'" << endl << endl << endl;
                 }
                 #endif
-                conflict_resolution(vector<int> (u12.begin(),u12.end()), s, direction, c);
+                conflict_resolution(vector<int> (u12.begin(),u12.end()), s, add_hops, c);
                 for (int i=next_to; i<c; i++) {
                     u12.insert(i);
                 }
@@ -1756,12 +1757,12 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
             #endif
             u12.insert(*it); 
         }
-         #ifdef DEBUG
+        #ifdef DEBUG
         if (fm::die) if (index_revisit.size()) cout << "'." << endl;
         #endif
 
         if (!ceiling && did_ceiling) { cout << "DID CEILING" << endl; exit(1); }
-        else if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, direction, ceiling);
+        else if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, add_hops, ceiling);
 
         if (!ceiling) each_it(s->nodewalk, nodevector::iterator) {
             if (it->labs.size() == 0) {
@@ -1777,7 +1778,10 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool direction
         }
         */
 
-        if (*core_ids.begin() == 0) s->hops++;
+        if (*core_ids.begin() == 0) {
+            if (add_hops) { s->hops+=hops; }
+            else s->hops+=1;
+        }
         return 0;
     }
     return 1;

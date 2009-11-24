@@ -25,6 +25,7 @@
 #include <vector>
 #include <iomanip>
 #include <algorithm>
+#include <assert.h>
 
 #include "misc.h"
 #include "database.h"
@@ -65,7 +66,7 @@ class PatternTree {
   public:
     PatternTree ( Path &path, unsigned int legindex );
     ~PatternTree ();
-    GSWalk* expand (pair<float, string> max, int parent_size);
+    GSWalk* expand (pair<float, string> max, const int parent_size);
     vector<LegPtr> legs; // pointers used to avoid copy-constructor during a resize of the vector
   private:
     void checkIfIndeedNormal ();

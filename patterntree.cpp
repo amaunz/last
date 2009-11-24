@@ -827,7 +827,9 @@ PatternTree::PatternTree ( PatternTree &parenttree, unsigned int legindex ) {
   }
 }
 
-GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
+GSWalk* PatternTree::expand (pair<float, string> max, const int parent_size) {
+
+  assert(parent_size>0);
 
   fm::statistics->patternsize++;
   if ( fm::statistics->patternsize > (int) fm::statistics->frequenttreenumbers.size () ) {
@@ -849,7 +851,6 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
   vector<int> core_ids; 
   for (int j=0; j<parent_size; j++) core_ids.push_back(j);
 
-  int legcnt=0;
   for ( int i=legs.size()-1; i>=0; i-- ) {
 
 
@@ -857,7 +858,6 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
     GSWalk* gsw = new GSWalk();
     GSWalk* topdown = NULL;
 
-    int gsw_size=0;
     bool nsign=1;
 
     if (fm::chisq->active) fm::chisq->Calc(legs[i]->occurrences.elements);
@@ -880,9 +880,9 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         map<Tid, int> weightmap_i; each_it(fm::chisq->fi_set, set<Tid>::iterator) { weightmap_i.insert(make_pair((*it),1)); }
         fm::graphstate->print(gsw, weightmap_a, weightmap_i); // print to graphstate walk
         gsw->activating=fm::chisq->activating;
-        gsw_size = gsw->nodewalk.size();
         if (cur_chisq >= fm::chisq->sig) nsign=0;
     }
+    const int gsw_size = gsw->nodewalk.size();
 
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl;exit(1); }
@@ -898,7 +898,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw" << endl;
         #endif
-        gsw->conflict_resolution(core_ids, siblingwalk, 0);
+        int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
     }
 
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -939,7 +939,7 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
             }
             // ELSE: MERGE TO SIBLINGWALK
             else {
-                topdown->conflict_resolution(core_ids, siblingwalk, 0); 
+                int res=topdown->conflict_resolution(core_ids, siblingwalk, 1); 
             }
             if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 5.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
@@ -971,8 +971,8 @@ GSWalk* PatternTree::expand (pair<float, string> max, int parent_size) {
   if (!legs.size()) cout << fm::graphstate->sep() << endl;
   #endif
   
-  return siblingwalk;
   fm::statistics->patternsize--;
+  return siblingwalk;
 
 }
 
