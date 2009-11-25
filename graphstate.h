@@ -126,16 +126,9 @@ class GraphState {
 };
 
 struct GSWNode {
-    //      v    <labs>         <occurrences active>    <occurrences inactive>
-    // e.g. v    <6 7>          {0->2 1->3}             {2 3}
-    // meaning                  T. 0 covered by 2 f.
-    //                          on this node 
+    //      v    <labs>
+    // e.g. v    <6 7>
     set<InputNodeLabel> labs;
-    map<Tid, int> a;
-    map<Tid, int> i;
-    bool deleted;
-    int optional;   // indicate a branch with running count of pattern that introduced it
-    int discrete_weight;
 
     int stack(GSWNode n);
     friend ostream& operator<< (ostream &out, GSWNode* n);
@@ -151,7 +144,6 @@ struct GSWEdge {
     map<Tid, int> a;
     map<Tid, int> i;
     bool deleted;
-    int optional;   // indicate a branch with running count of pattern that introduced it
     int discrete_weight;
 
     int stack(GSWEdge e);
@@ -197,6 +189,7 @@ class GSWalk {
       GSWalk() : activating(0), hops(0), cutoff(0.0), adj_m_sing(0), adj_m_rank(0), adj_m_size(0) {
         to_nodes_ex.clear();
       }
+
 };
 
 #endif

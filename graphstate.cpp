@@ -358,7 +358,7 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
   // convert occurrence lists to weight maps
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     set<InputNodeLabel> inl; inl.insert(fm::database->nodelabels[nodes[i].label].inputlabel);
-    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i, 0, 0, 1 } );
+    gsw->nodewalk.push_back( (GSWNode) { inl } );
   }
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
@@ -366,7 +366,7 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
       GraphState::GSEdge &edge = nodes[i].edges[j];
       if ( i < edge.tonode ) {
           set<InputEdgeLabel> iel; iel.insert((InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel);
-          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i, 0, 0, 1 } ;
+          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i, 0, 1 } ;
       }
     }
   }
@@ -1349,7 +1349,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
     if (core_ids.size()>0) {
 
         // Increase hops for sw
-        if (starting) s->hops+=hops;
+        if (starting) { s->hops+=hops; }
 
         // get refined edges from this
         set<int> d1;  // the set of edges going out of j in this
@@ -1390,8 +1390,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0, 0 };
-                            GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0, 0 };
+                            GSWNode n = { inl };
+                            GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0 };
                             s->add_edge(from->first, e, n, 0, &core_ids, &u12);
                         }
                     }
@@ -1502,8 +1502,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0, 0 };
-                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 0, 0 };
+                            GSWNode n = { inl };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 0 };
                             ninsert21[*it][j]=n;
                             einsert21[*it][j]=e;
                         }
@@ -1539,8 +1539,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
 
-                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, s->hops+1, 0 };
-                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, s->hops+1, 0 };
+                            GSWNode n = { inl };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 0 };
 
                             ninsert12[*it][j]=n;
                             einsert12[*it][j]=e;
@@ -1837,13 +1837,6 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
 //
 int GSWNode::stack (GSWNode n) {
     labs.insert(n.labs.begin(), n.labs.end());
-    for (map<Tid,int>::iterator it=n.a.begin(); it!=n.a.end(); it++) {
-        a[it->first] = a[it->first] + it->second;
-    }
-    for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
-        i[it->first] = i[it->first] + it->second;
-    }
-    discrete_weight = discrete_weight + n.discrete_weight;
     return 0;
 }
 
@@ -2091,7 +2084,6 @@ void GSWalk::svd () {
                     float v=gsl_matrix_get(A,i,j);
                     if (v<1) {
                         it2->second.deleted = 1;
-                        nodewalk[j].deleted = 1;
                     }
                 }
             }
