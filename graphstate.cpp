@@ -1341,12 +1341,15 @@ void GraphState::puti ( FILE *f, int i ) {
 
 //! s-sided stack of two features by walking core ids
 //  NOTE: s is intended to 'carry' the growing meta pattern
-//  add_hops=1: used for topdown merging to incorporate hops from topdown into s
-int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops, int ceiling) {
+//  starting=1: indicate that this is iteration 0, i.e. the original call to this function
+int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting, int ceiling) {
 
 
     // sanity check: core
     if (core_ids.size()>0) {
+
+        // Increase hops for sw
+        if (starting) s->hops+=hops;
 
         // get refined edges from this
         set<int> d1;  // the set of edges going out of j in this
@@ -1658,7 +1661,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops,
                     cout << endl << endl << endl << "STARTING CEILING MODE next_to: '" << next_to << "' c: '" << c << "'" << endl << endl << endl;
                 }
                 #endif
-                conflict_resolution(vector<int> (u12.begin(),u12.end()), s, add_hops, c);
+                conflict_resolution(vector<int> (u12.begin(),u12.end()), s, 0, c);
                 for (int i=next_to; i<c; i++) {
                     u12.insert(i);
                 }
@@ -1766,7 +1769,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops,
         #endif
 
         if (!ceiling && did_ceiling) { cout << "DID CEILING" << endl; exit(1); }
-        else if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, add_hops, ceiling);
+        else if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, 0, ceiling);
 
         if (!ceiling) each_it(s->nodewalk, nodevector::iterator) {
             if (it->labs.size() == 0) {
@@ -1782,9 +1785,6 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops,
         }
         */
 
-        if (*core_ids.begin() == 0) {
-            s->hops+=hops;
-        }
         return 0;
     }
     return 1;

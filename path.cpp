@@ -550,7 +550,7 @@ GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw 1" << endl;
         #endif
-        int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
+        int res=gsw->conflict_resolution(core_ids, siblingwalk);
     }
 
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 2.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -590,7 +590,7 @@ GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
               }
               // ELSE: MERGE TO SIBLINGWALK
               else {
-                  int res=topdown->conflict_resolution(core_ids, siblingwalk, 1);
+                  int res=topdown->conflict_resolution(core_ids, siblingwalk);
               }
               if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 2.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; each_it(topdown->to_nodes_ex, vector<int>::iterator) cout << *it << " "; cout << endl;  exit(1); }
 
@@ -667,7 +667,7 @@ GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
         #ifdef DEBUG
         if (fm::die) cout << "CR gsw 2" << endl;
         #endif
-        int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
+        int res=gsw->conflict_resolution(core_ids, siblingwalk);
     }
 
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 3.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -708,7 +708,7 @@ GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
               }
               // ELSE: MERGE TO SIBLINGWALK
               else {
-                  int res=topdown->conflict_resolution(core_ids, siblingwalk, 1); 
+                  int res=topdown->conflict_resolution(core_ids, siblingwalk); 
               }
               if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 3.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
@@ -796,7 +796,7 @@ GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
               #ifdef DEBUG
               if (fm::die) cout << "CR gsw 3" << endl;
               #endif
-              int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
+              int res=gsw->conflict_resolution(core_ids, siblingwalk);
           }
 
 
@@ -836,7 +836,7 @@ GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
                     }
                     // ELSE: MERGE TO SIBLINGWALK
                     else {
-                        int res=topdown->conflict_resolution(core_ids, siblingwalk, 1);
+                        int res=topdown->conflict_resolution(core_ids, siblingwalk);
                     }
                     if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 4.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 
@@ -939,7 +939,7 @@ void Path::expand () {
           #ifdef DEBUG
           if (fm::die) cout << "CR gsw 4" << endl;
           #endif
-          int res=gsw->conflict_resolution(core_ids, siblingwalk, 0);
+          int res=gsw->conflict_resolution(core_ids, siblingwalk);
       }
 
       if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Still nodes marked as available 1.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl; exit(1); }
@@ -977,7 +977,7 @@ void Path::expand () {
                 }
                 // ELSE: MERGE TO SIBLINGWALK
                 else {
-                    int res=topdown->conflict_resolution(core_ids, siblingwalk, 1); 
+                    int res=topdown->conflict_resolution(core_ids, siblingwalk); 
                 }
                 if (topdown->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr << "Error! Still nodes marked as available 1.2. " << topdown->to_nodes_ex.size() << " " << siblingwalk->to_nodes_ex.size() <<  endl; exit(1); }
 

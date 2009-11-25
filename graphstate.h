@@ -182,7 +182,7 @@ class GSWalk {
       int adj_m_rank;
       int adj_m_size;
 
-      int conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops, int ceiling=0);
+      int conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting=1, int ceiling=0);
       int stack (GSWalk* single, vector<int> core_ids);
 
       void add_edge(int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* core_ids, set<int>* u12);
