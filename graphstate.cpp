@@ -1394,10 +1394,12 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                             GSWNode n = { inl };
                             GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0 };
                             s->add_edge(from->first, e, n, 0, &core_ids, &u12);
+                            stack_locations[to->first]=from->first;
                         }
                     }
                 }
             }
+            s->stack(this,stack_locations);
             s->activating=activating;
             //cout << "init to " << s->activating << endl;
         } 
