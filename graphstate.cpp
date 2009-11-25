@@ -1366,9 +1366,10 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
         map<int, map<int, GSWEdge> > einsert21; 
         map<int, map<int, GSWNode> > ninsert12; 
         map<int, map<int, GSWEdge> > einsert12; 
+        map<int, int> c12_inc;
+        map<int, int> stack_locations;
         //  ^^^      ^^^    
         //  to       from
-        set<int> c12_inc;
 
         sort(core_ids.begin(), core_ids.end()); 
         if (nodewalk.size() < core_ids.size()) { cerr << "ERROR! More core ids than nodes." << endl; exit(1); }
@@ -1423,6 +1424,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
             einsert12.clear();
             c12_inc.clear();
             index_revisit.clear();
+            stack_locations.clear();
 
             #ifdef DEBUG
             if (fm::die) {
@@ -1479,7 +1481,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                         cout << ">" << endl;
                     }
                     #endif
-                    if (ceiling==0 || *it<ceiling) c12_inc.insert(*it);
+                    if (ceiling==0 || *it<ceiling) c12_inc[*it]=j;
                 }
         
                 // single edges
@@ -1553,13 +1555,12 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                         }
                     }
                 }
-                
             } // end for core ids
 
             
             map<int, map<int, GSWEdge> >::iterator it21 = einsert21.begin();
             map<int, map<int, GSWEdge> >::iterator it12 = einsert12.begin();
-            set<int>::iterator itc=c12_inc.begin();
+            map<int,int>::iterator itc=c12_inc.begin();
 
             // Must recognize 'bags'
             bool do_ceiling=0;
@@ -1570,16 +1571,18 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
             
             // Insert lowest conflict edge!
             if (itc != c12_inc.end()) {
-                if ( (it21 == einsert21.end()) || (*itc < it21->first) ) {
-                    if ( (it12 == einsert12.end()) || (*itc < it12->first) ) {
-                         if (*itc>next_to) { 
-                            do_ceiling=1; c=*itc; 
-                            #ifdef DEBUG
-                            cout << "1) NEXT TO < " << *itc << endl;
-                            #endif
+                if ( (it21 == einsert21.end()) || (itc->first < it21->first) ) {
+                    if ( (it12 == einsert12.end()) || (itc->first < it12->first) ) {
+                         if (itc->first>next_to) { 
+                             do_ceiling=1; c=itc->first; 
+                             #ifdef DEBUG
+                             cout << "1) NEXT TO < " << itc->first << endl;
+                             #endif
                          }
                          else { 
-                         u12.insert(*itc);
+                             // AM: remember itc->first (to) and itc->second (from)
+                             stack_locations[itc->first]=itc->second;
+                             u12.insert(itc->first);
                          }
                     }
                 }
@@ -1608,13 +1611,15 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                             }
                             else {
                                 add_edge(
-                                    it21->second.begin()->first, 
+                                    it21->second.begin()->first,  // begin() jumps to first of always only one element.
                                     it21->second.begin()->second, 
                                     ninsert21[it21->first][it21->second.begin()->first],
                                     1,
                                     &core_ids,
                                     &u12
                                 );
+                                // AM: remember it21->first (to) and it21->second.begin()->first (from) for stacking
+                                // stack_locations[it21->first]=it21->second.begin()->first; DO NOT REMEMBER!!! ONLY DIRECTION THIS->S AND CONFLICTS
                                 u12.insert(it21->first);
                             }
                         }
@@ -1644,6 +1649,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                                     &core_ids,
                                     &u12
                                 );
+                                // AM: remember it12->first (to) and it12->second.begin()->first (from) for stacking
+                                stack_locations[it12->first]=it12->second.begin()->first;
                                 u12.insert(it12->first);
                             }
                         }
@@ -1741,7 +1748,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
             // all core id nodes
             // all edges leaving core id nodes
             // this includes edges inside the core, as well as edges leaving the core
-            s->stack(this, core_ids);
+            s->stack(this, stack_locations);
         }
 
 
@@ -1795,20 +1802,26 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
 //  all edges leaving core id nodes
 //  includes edges inside the core, as well as edges leaving the core
 //
-int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
-    // sanity check: core ids present in nodewalks
+int GSWalk::stack (GSWalk* w, map<int,int> stack_locations) {
+    // sanity check: from ids present in nodewalks
     vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
-    if (!(includes(test_ids.begin(),test_ids.end(),core_ids.begin(),core_ids.end()))) {
-        cerr << "Error! Set-more core ids than nodes." << endl; 
+    vector<int> from_ids; for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) { from_ids.push_back(it->second); }
+
+    if (!(includes(test_ids.begin(),test_ids.end(),from_ids.begin(),from_ids.end()))) {
+        cerr << "Error! Set-more from ids than nodes." << endl; 
         exit(1);
     }
+
     // nodes clean: do the actual node merging
-    each_it(core_ids, vector<int>::iterator) {
-        nodewalk[*it].stack(w->nodewalk[*it]);
+    each_it(from_ids, vector<int>::iterator) {
+        nodewalk[*it].stack(w->nodewalk[*it]); // can do regardless of 'to' since only labels affected for nodes.
     }
+
     // edge merging
-    each_it(core_ids, vector<int>::iterator) {
-        edgemap::iterator from = edgewalk.find(*it);
+    for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) {
+        int t=it->first;
+        int f=it->second;
+        edgemap::iterator from = edgewalk.find(f);
         if (from!=edgewalk.end())   {
             edgemap::iterator w_from=w->edgewalk.find(from->first);
             if (w_from == w->edgewalk.end()) {
@@ -1819,7 +1832,8 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
             else {
                 map<int, GSWEdge>& e = from->second;
                 map<int, GSWEdge>& se = w_from->second;
-                for (map<int, GSWEdge>::iterator to=e.begin(); to!=e.end(); to++) {
+                map<int, GSWEdge>::iterator to=e.find(t);
+                if (to!=e.end()) {
                     map<int, GSWEdge>::iterator w_to=se.find(to->first);
                     if (w_to == se.end()) {
                         #ifdef DEBUG
@@ -1827,6 +1841,10 @@ int GSWalk::stack (GSWalk* w, vector<int> core_ids) {
                         #endif
                     }
                     else to->second.stack(w_to->second);
+                }
+                else {
+                    cout << "Error! 'to' not found for stacking." << endl;
+                    exit(1);
                 }
             }
         }
