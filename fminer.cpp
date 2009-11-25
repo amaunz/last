@@ -303,6 +303,8 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
         cout << "<key id=\"hops\" for=\"graph\" attr.name=\"hops\" attr.type=\"int\" />" << endl;
         cout << "<key id=\"weight_n\" for=\"node\" attr.name=\"node_weight\" attr.type=\"int\" />" << endl;
         cout << "<key id=\"weight_e\" for=\"edge\" attr.name=\"edge_weight\" attr.type=\"int\" />" << endl;
+        cout << "<key id=\"discrete_weight_n\" for=\"node\" attr.name=\"node_discrete_weight\" attr.type=\"int\" />" << endl;
+        cout << "<key id=\"discrete_weight_e\" for=\"edge\" attr.name=\"edge_discrete_weight\" attr.type=\"int\" />" << endl;
         cout << "<key id=\"del_n\" for=\"node\" attr.name=\"node_deleted\" attr.type=\"boolean\" />" << endl;
         cout << "<key id=\"del_e\" for=\"edge\" attr.name=\"edge_deleted\" attr.type=\"boolean\" />" << endl;
         cout << "<key id=\"opt_n\" for=\"node\" attr.name=\"node_optional\" attr.type=\"boolean\" />" << endl;

@@ -135,6 +135,7 @@ struct GSWNode {
     map<Tid, int> i;
     bool deleted;
     int optional;   // indicate a branch with running count of pattern that introduced it
+    int discrete_weight;
 
     int stack(GSWNode n);
     friend ostream& operator<< (ostream &out, GSWNode* n);
@@ -151,6 +152,7 @@ struct GSWEdge {
     map<Tid, int> i;
     bool deleted;
     int optional;   // indicate a branch with running count of pattern that introduced it
+    int discrete_weight;
 
     int stack(GSWEdge e);
     static bool lt_to (GSWEdge& e1, GSWEdge& e2){

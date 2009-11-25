@@ -1067,6 +1067,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
         }
         //os << "            </inactive_occurrences>" << endl;
         os << "            <data key=\"weight_n\">" << count << "</data>" << endl;
+        os << "            <data key=\"discrete_weight_n\">" << it->discrete_weight << "</data>" << endl;
 
         os << "            <data key=\"del_n\">" << it->deleted << "</data>" << endl;
         os << "            <data key=\"opt_n\">" << it->optional << "</data>" << endl;
@@ -1107,6 +1108,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             }
             //os << "            </inactive_occurrences>" << endl;
             os << "            <data key=\"weight_e\">" << count << "</data>" << endl;
+            os << "            <data key=\"discrete_weight_e\">" << it2->second.discrete_weight << "</data>" << endl;
            
             os << "            <data key=\"del_e\">" << it2->second.deleted << "</data>" << endl;
             os << "            <data key=\"opt_e\">" << it2->second.optional << "</data>" << endl;

@@ -355,10 +355,10 @@ void GraphState::print ( FILE *f ) {
 
 void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> weightmap_i ) {
 
-  // convert occurrence lists to weight maps with initial weight 1
+  // convert occurrence lists to weight maps
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
     set<InputNodeLabel> inl; inl.insert(fm::database->nodelabels[nodes[i].label].inputlabel);
-    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i, 0, 0 } );
+    gsw->nodewalk.push_back( (GSWNode) { inl, weightmap_a, weightmap_i, 0, 0, 1 } );
   }
 
   for ( int i = 0; i < (int) nodes.size (); i++ ) {
@@ -366,10 +366,12 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
       GraphState::GSEdge &edge = nodes[i].edges[j];
       if ( i < edge.tonode ) {
           set<InputEdgeLabel> iel; iel.insert((InputEdgeLabel) fm::database->edgelabels[fm::database->edgelabelsindexes[edge.edgelabel]].inputedgelabel);
-          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i, 0, 0 } ;
+          gsw->edgewalk[i][edge.tonode] = (GSWEdge) { edge.tonode , iel, weightmap_a, weightmap_i, 0, 0, 1 } ;
       }
     }
   }
+  
+  gsw->hops=1;
 
 }
 
@@ -1385,8 +1387,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops,
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0 };
-                            GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0 };
+                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0, 0 };
+                            GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0, 0 };
                             s->add_edge(from->first, e, n, 0, &core_ids, &u12);
                         }
                     }
@@ -1497,8 +1499,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops,
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0 };
-                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 0 };
+                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, 0, 0 };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, 0, 0 };
                             ninsert21[*it][j]=n;
                             einsert21[*it][j]=e;
                         }
@@ -1533,8 +1535,10 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops,
                             map<Tid, int> weightmap_i; 
                             set<InputNodeLabel> inl;
                             set<InputEdgeLabel> iel;
-                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, s->hops+1 };
-                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, s->hops+1 };
+
+                            GSWNode n = { inl, weightmap_a, weightmap_i, 0, s->hops+1, 0 };
+                            GSWEdge e = { *it, iel, weightmap_a, weightmap_i, 0, s->hops+1, 0 };
+
                             ninsert12[*it][j]=n;
                             einsert12[*it][j]=e;
                         }
@@ -1779,8 +1783,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool add_hops,
         */
 
         if (*core_ids.begin() == 0) {
-            if (add_hops) { s->hops+=hops; }
-            else s->hops+=1;
+            s->hops+=hops;
         }
         return 0;
     }
@@ -1840,6 +1843,7 @@ int GSWNode::stack (GSWNode n) {
     for (map<Tid,int>::iterator it=n.i.begin(); it!=n.i.end(); it++) {
         i[it->first] = i[it->first] + it->second;
     }
+    discrete_weight = discrete_weight + n.discrete_weight;
     return 0;
 }
 
@@ -1853,6 +1857,7 @@ int GSWEdge::stack (GSWEdge e) {
     for (map<Tid,int>::iterator it=e.i.begin(); it!=e.i.end(); it++) {
         i[it->first] = i[it->first] + it->second;
     }
+    discrete_weight = discrete_weight + e.discrete_weight;
     return 0;
 }
 
