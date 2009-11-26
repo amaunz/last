@@ -1684,7 +1684,6 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                 }
                 #endif
                 do_ceiling=0;
-                //did_ceiling=1;
             }
 
 
@@ -1722,40 +1721,38 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
         #endif
        
 
-        if (!ceiling) {
-            #ifdef DEBUG
-            if (fm::die) {
-                //cout << this ;
-                //cout << s ;
-                cout << "-stack-" << endl;
-            }
-            #endif
-
-            each_it(edgewalk, edgemap::iterator) {
-                for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
-                    if (it2->first >= nodewalk.size()) {
-                        cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
-                        cout << this ;
-                        exit(1);
-                    }
-                }
-            }
-            each_it(s->edgewalk, edgemap::iterator) {
-                for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
-                    if (it2->first >= s->nodewalk.size()) {
-                        cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
-                        cout << s ;
-                        exit(1);
-                    }
-                }
-            }
-
-            // stack labels and activities to s
-            // all core id nodes
-            // all edges leaving core id nodes
-            // this includes edges inside the core, as well as edges leaving the core
-            s->stack(this, stack_locations);
+        #ifdef DEBUG
+        if (fm::die) {
+            //cout << this ;
+            //cout << s ;
+            cout << "-stack-" << endl;
         }
+        #endif
+
+        each_it(edgewalk, edgemap::iterator) {
+            for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                if (it2->first >= nodewalk.size()) {
+                    cout << "Error! Nodewalk contains not enough nodes. Index: " << it2->first << ", size: " <<  nodewalk.size() << endl;
+                    cout << this ;
+                    exit(1);
+                }
+            }
+        }
+        each_it(s->edgewalk, edgemap::iterator) {
+            for(map<int, GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+                if (it2->first >= s->nodewalk.size()) {
+                    cout << "Error! S-Nodewalk contains not enough nodes. Index: " << it2->first << ", size; " << s->nodewalk.size() << endl;
+                    cout << s ;
+                    exit(1);
+                }
+            }
+        }
+
+        // stack labels and activities to s
+        // all core id nodes
+        // all edges leaving core id nodes
+        // this includes edges inside the core, as well as edges leaving the core
+        s->stack(this, stack_locations);
 
 
         #ifdef DEBUG
@@ -1781,23 +1778,14 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
         if (fm::die) if (index_revisit.size()) cout << "'." << endl;
         #endif
 
-        if (!ceiling && did_ceiling) { cout << "DID CEILING" << endl; exit(1); }
-        else if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, 0, ceiling);
+        if (u12.size()) conflict_resolution(vector<int> (u12.begin(),u12.end()), s, 0, ceiling);
 
         if (!ceiling) each_it(s->nodewalk, nodevector::iterator) {
             if (it->labs.size() == 0) {
                 cerr << "Error! S-Labels left to fill." << endl; exit(1);
             }
         }
-
-        /*
-        each_it(nodewalk, nodevector::iterator) {
-            if (it->labs.size() == 0) {
-                cerr << "Error! Labels left to fill." << endl; exit(1);
-            }
-        }
-        */
-
+        
         return 0;
     }
     return 1;
@@ -1811,15 +1799,24 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
 int GSWalk::stack (GSWalk* w, map<int,int> stack_locations) {
     // sanity check: from ids present in nodewalks
     vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
-    vector<int> from_ids; for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) { from_ids.push_back(it->second); }
-    vector<int> to_ids; for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) { from_ids.push_back(it->first); }
+    vector<int> from_ids; for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) { from_ids.push_back(it->second); } 
+    vector<int> to_ids; for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) { to_ids.push_back(it->first); }
+
+    remove_dups_vector(from_ids);
+    remove_dups_vector(to_ids);
+    sort(from_ids.begin(),from_ids.end());
+    sort(to_ids.begin(), to_ids.end());
 
     if (!(includes(test_ids.begin(),test_ids.end(),from_ids.begin(),from_ids.end()))) {
-        cerr << "Error! Set-more from ids than nodes." << endl; 
+        cerr << "Error! Set-more 'from' ids than nodes." << endl; 
+        cerr << "From: '"; each_it(from_ids, vector<int>::iterator) cerr << *it << " "; cerr << "'" << endl;
+        cerr << "Nodes: '"; each_it(test_ids, vector<int>::iterator) cerr << *it << " "; cerr << "'" << endl;
         exit(1);
     }
     if (!(includes(test_ids.begin(),test_ids.end(),to_ids.begin(),to_ids.end()))) {
-        cerr << "Error! Set-more to ids than nodes." << endl; 
+        cerr << "Error! Set-more 'to' ids than nodes." << endl; 
+        cerr << "To: '"; each_it(to_ids, vector<int>::iterator) cerr << *it << " "; cerr << "'" << endl;
+        cerr << "Nodes: '"; each_it(test_ids, vector<int>::iterator) cerr << *it << " "; cerr << "'" << endl;
         exit(1);
     }
 
@@ -1908,7 +1905,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     if ((e.to >= *(core_ids->begin())) && (e.to <= *(core_ids->end()-1))) { 
         to_core_range=1; 
         #ifdef DEBUG 
-        //if (fm::die) cout << "to in core range (" << e.to << ")." << endl; 
+        if (fm::die) cout << "to in core range (" << e.to << ")." << endl; 
         #endif
     }
     if (reorder && find(core_ids->begin(), core_ids->end(), e.to) != core_ids->end()) { cerr << "Error! e.to is a core-id." << endl; exit(1); }

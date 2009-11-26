@@ -175,6 +175,20 @@ class GSWalk {
       int adj_m_size;
 
       int conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting=1, int ceiling=0);
+        
+      static void remove_dups_vector (vector<int>& v) {
+          set<int> s;
+          pair< set<int>::iterator, bool > result;
+          for (vector<int>::iterator i = v.begin(); i < v.end(); ++i) {
+              result = s.insert(*i);
+              if (!result.second) {
+                  v.erase(i);
+                  --i; // adjust iterator
+              }
+          }
+      }
+
+
       int stack (GSWalk* single, map<int,int> stack_locations);
 
       void add_edge(int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* core_ids, set<int>* u12);
