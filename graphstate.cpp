@@ -1405,8 +1405,9 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
         } 
         
         bool did_ceiling=0;
+        stack_locations.clear();
 
-        // Do ... while still edges unexpanded for core ids 
+        // Do 'create candidate list and insert lowest edge' while still edges unexpanded for core ids.
         do {
 
             #ifdef DEBUG
@@ -1426,7 +1427,6 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
             einsert12.clear();
             c12_inc.clear();
             index_revisit.clear();
-            stack_locations.clear();
 
             #ifdef DEBUG
             if (fm::die) {
@@ -1438,7 +1438,11 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
 
             // Gather candidate edges for all core ids!
             for (int index = 0; index<core_ids.size(); index++) {
+
                 int j = core_ids[index];
+
+                //s->nodewalk[j].stack(nodewalk[j]);
+ 
                 d1.clear();  
                 d2.clear();
                 edgemap::iterator e1 = edgewalk.find(j);
@@ -1808,16 +1812,25 @@ int GSWalk::stack (GSWalk* w, map<int,int> stack_locations) {
     // sanity check: from ids present in nodewalks
     vector<int> test_ids; for (int i=0;i<nodewalk.size();i++) { test_ids.push_back(i); }
     vector<int> from_ids; for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) { from_ids.push_back(it->second); }
+    vector<int> to_ids; for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) { from_ids.push_back(it->first); }
 
     if (!(includes(test_ids.begin(),test_ids.end(),from_ids.begin(),from_ids.end()))) {
         cerr << "Error! Set-more from ids than nodes." << endl; 
         exit(1);
     }
+    if (!(includes(test_ids.begin(),test_ids.end(),to_ids.begin(),to_ids.end()))) {
+        cerr << "Error! Set-more to ids than nodes." << endl; 
+        exit(1);
+    }
 
     // nodes clean: do the actual node merging
     each_it(from_ids, vector<int>::iterator) {
-        nodewalk[*it].stack(w->nodewalk[*it]); // can do regardless of 'to' since only labels affected for nodes.
+        nodewalk[*it].stack(w->nodewalk[*it]); // can do multiple times since only labels affected for nodes.
     }
+    each_it(to_ids, vector<int>::iterator) {
+        nodewalk[*it].stack(w->nodewalk[*it]);
+    }
+
 
     // edge merging
     for (map<int,int>::iterator it=stack_locations.begin(); it!=stack_locations.end(); it++) {
@@ -1895,7 +1908,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
     if ((e.to >= *(core_ids->begin())) && (e.to <= *(core_ids->end()-1))) { 
         to_core_range=1; 
         #ifdef DEBUG 
-        if (fm::die) cout << "to in core range (" << e.to << ")." << endl; 
+        //if (fm::die) cout << "to in core range (" << e.to << ")." << endl; 
         #endif
     }
     if (reorder && find(core_ids->begin(), core_ids->end(), e.to) != core_ids->end()) { cerr << "Error! e.to is a core-id." << endl; exit(1); }

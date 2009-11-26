@@ -888,6 +888,7 @@ GSWalk* Path::expand2 (pair<float,string> max, const int parent_size) {
 
 void Path::expand () {
 
+    fm::die=1;
   // horizontal view: conflict_resolution will merge into siblingwalk
   // NOTE: siblingwalk is intended to 'carry' the growing meta pattern
   GSWalk* siblingwalk = new GSWalk();

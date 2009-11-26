@@ -1029,7 +1029,8 @@ void PatternTree::checkIfIndeedNormal () {
 
 ostream& operator<< (ostream& os, GSWalk* gsw) {
     static int gsw_counter=0;
-   
+
+    #ifndef DEBUG
     if (gsw->edgewalk.size()) {
         gsw_counter++;
         os << "    <graph id=\"" << gsw_counter << "\" edgedefault=\"undirected\">" << endl;
@@ -1081,6 +1082,60 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
         os << "    </graph>" << endl;
         os << endl;
     }
+    #endif
+    
+    #ifdef DEBUG
+    if (gsw->edgewalk.size()) {
+        gsw_counter++;
+        //os << "t # " << gsw_counter << " " << gsw->activating << " " << gsw->hops << endl;
+    }
+
+    for(vector<GSWNode>::iterator it=gsw->nodewalk.begin(); it!=gsw->nodewalk.end(); it++) {
+        os << distance(gsw->nodewalk.begin(), it);
+        os << " < ";
+        for (set<InputNodeLabel>::iterator it2=it->labs.begin(); it2!=it->labs.end(); it2++) {
+            os << *it2 << " ";
+        }
+        os << ">";
+        os << endl;
+    }
+
+    for (map<int, map<int, GSWEdge> >::iterator it=gsw->edgewalk.begin(); it!=gsw->edgewalk.end(); it++) {
+        if (!it->second.size()) os << it->first << endl;
+
+        for(map<int,GSWEdge>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+
+            // from and to
+            os << it->first << " " << it2->first; 
+
+            os << " < ";
+            for (set<InputEdgeLabel>::iterator it3=it2->second.labs.begin(); it3!=it2->second.labs.end(); it3++) {
+                os << *it3 << " ";
+            }
+            os << ">";
+
+            int count=0;
+            for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
+                count = count + it3->second;
+            }
+            for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
+                count = count + it3->second;
+            }
+            os << " " << count;
+
+            if (it2->second.deleted) os << " [";
+            if (it2->second.deleted) os << "D";
+            if (it2->second.deleted) os << "] ";
+
+            os << endl;
+        }
+    }
+
+    if (gsw->edgewalk.size()) {
+        os << endl;
+    }
+    #endif
+
     return os;
 };
 
