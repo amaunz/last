@@ -1351,7 +1351,22 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
         // Increase hops for sw
         if (starting) { s->hops+=hops; }
 
-        // get refined edges from this
+        // NESTING 0 VARS
+        set<int> u12; // the incremental union set over both d12 and d21 and j (includes mutex and node conflict edges)
+        map<int, int> stack_locations;
+        //  ^^^  ^^^    
+        //  to   from
+
+
+        // NESTING 1 VARS (WHILE LOOP THROUGH INSERTION CANDIDATES)
+        map<int, map<int, GSWNode> > ninsert21; 
+        map<int, map<int, GSWEdge> > einsert21; 
+        map<int, map<int, GSWNode> > ninsert12; 
+        map<int, map<int, GSWEdge> > einsert12; 
+        map<int, int> c12_inc;
+
+
+        // NESTING 2 VARS (FOR LOOP THROUGH CORE)
         set<int> d1;  // the set of edges going out of j in this
         set<int> d2;  // the set of edges going out of j in s
         set<int> i12; // the common edges for j (core and node conflict edges)
@@ -1359,17 +1374,8 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
         set<int> c12; // the common edges for j without the core (exactly the node conflict edges)
         set<int> d12; // the mutex edges for j (neither core nor node conflict edges)
         set<int> d21; // 
-        set<int> u12; // the incremental union set over both d12 and d21 and j (includes mutex and node conflict edges)
         set<int> index_revisit; // index nodes to be revisited, due to out-of-bound indices in to-nodes 
 
-        map<int, map<int, GSWNode> > ninsert21; 
-        map<int, map<int, GSWEdge> > einsert21; 
-        map<int, map<int, GSWNode> > ninsert12; 
-        map<int, map<int, GSWEdge> > einsert12; 
-        map<int, int> c12_inc;
-        map<int, int> stack_locations;
-        //  ^^^  ^^^    
-        //  to   from
 
         sort(core_ids.begin(), core_ids.end()); 
         if (nodewalk.size() < core_ids.size()) { cerr << "ERROR! More core ids than nodes." << endl; exit(1); }

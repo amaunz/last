@@ -1061,19 +1061,8 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
                 labels.append(to_string(*it3));
             }
             os << "            <data key=\"lab_e\">" << labels << "</data>" << endl;
-
-            int count=0;
-            for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
-                count = count + it3->second;
-            }
-
-            for (map<Tid, int>::iterator it3=it2->second.i.begin(); it3!=it2->second.i.end(); it3++) {
-                count = count + it3->second;
-            }
-            os << "            <data key=\"weight_e\">" << count << "</data>" << endl;
-            os << "            <data key=\"discrete_weight_e\">" << it2->second.discrete_weight << "</data>" << endl;
-           
-            os << "            <data key=\"del_e\">" << it2->second.deleted << "</data>" << endl;
+            os << "            <data key=\"weight\">" << it2->second.discrete_weight << "</data>" << endl;
+            os << "            <data key=\"del\">" << it2->second.deleted << "</data>" << endl;
             os << "        </edge>" << endl;
         }
     }

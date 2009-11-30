@@ -286,31 +286,12 @@ vector<string>* Fminer::MineRoot(unsigned int j) {
         cout << "<graphml xmlns=\"http://graphml.graphdrawing.org/xmlns\"\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xsi:noNamespaceSchemaLocation=\"graphml.xsd\">" << endl << endl;
 
         cout << "<!-- LAtent STructure Mining (LAST) descriptors-->" << endl << endl;
-
-        /*
-        cout << "<key id=\"act\" for=\"graph\" attr.name=\"activating\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
-        cout << "<key id=\"hops\" for=\"graph\" attr.name=\"hops\" attr.type=\"int\">\n    <default>0</default>\n</key>" << endl;
-        cout << "<key id=\"weight_n\" for=\"node\" attr.name=\"node_weight\" attr.type=\"int\">\n    <default>0</default>\n</key>" << endl;
-        cout << "<key id=\"weight_e\" for=\"edge\" attr.name=\"edge_weight\" attr.type=\"int\">\n    <default>0</default>\n</key>" << endl;
-        cout << "<key id=\"del_n\" for=\"node\" attr.name=\"node_deleted\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
-        cout << "<key id=\"del_e\" for=\"edge\" attr.name=\"edge_deleted\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
-        cout << "<key id=\"opt_n\" for=\"node\" attr.name=\"node_optional\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
-        cout << "<key id=\"opt_e\" for=\"edge\" attr.name=\"edge_optional\" attr.type=\"boolean\">\n    <default>false</default>\n</key>" << endl;
-        cout << "<key id=\"lab_n\" for=\"node\">\n    <default></default>\n</key>" << endl;
-        cout << "<key id=\"lab_e\" for=\"edge\">\n    <default></default>\n</key>" << endl;
-        */
         cout << "<key id=\"act\" for=\"graph\" attr.name=\"activating\" attr.type=\"boolean\" />" << endl;
         cout << "<key id=\"hops\" for=\"graph\" attr.name=\"hops\" attr.type=\"int\" />" << endl;
-        cout << "<key id=\"weight_n\" for=\"node\" attr.name=\"node_weight\" attr.type=\"int\" />" << endl;
-        cout << "<key id=\"weight_e\" for=\"edge\" attr.name=\"edge_weight\" attr.type=\"int\" />" << endl;
-        cout << "<key id=\"discrete_weight_n\" for=\"node\" attr.name=\"node_discrete_weight\" attr.type=\"int\" />" << endl;
-        cout << "<key id=\"discrete_weight_e\" for=\"edge\" attr.name=\"edge_discrete_weight\" attr.type=\"int\" />" << endl;
-        cout << "<key id=\"del_n\" for=\"node\" attr.name=\"node_deleted\" attr.type=\"boolean\" />" << endl;
-        cout << "<key id=\"del_e\" for=\"edge\" attr.name=\"edge_deleted\" attr.type=\"boolean\" />" << endl;
-        cout << "<key id=\"opt_n\" for=\"node\" attr.name=\"node_optional\" attr.type=\"boolean\" />" << endl;
-        cout << "<key id=\"opt_e\" for=\"edge\" attr.name=\"edge_optional\" attr.type=\"boolean\" />" << endl;
         cout << "<key id=\"lab_n\" for=\"node\" attr.name=\"node_labels\" attr.type=\"string\" />" << endl;
         cout << "<key id=\"lab_e\" for=\"edge\" attr.name=\"edge_labels\" attr.type=\"string\" />" << endl;
+        cout << "<key id=\"weight\" for=\"edge\" attr.name=\"edge_weight\" attr.type=\"int\" />" << endl;
+        cout << "<key id=\"del\" for=\"edge\" attr.name=\"edge_deleted\" attr.type=\"boolean\" />" << endl;
 
 
     }
