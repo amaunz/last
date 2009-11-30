@@ -1114,6 +1114,7 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
             }
             os << ">";
 
+            /*
             int count=0;
             for (map<Tid, int>::iterator it3=it2->second.a.begin(); it3!=it2->second.a.end(); it3++) {
                 count = count + it3->second;
@@ -1122,6 +1123,8 @@ ostream& operator<< (ostream& os, GSWalk* gsw) {
                 count = count + it3->second;
             }
             os << " " << count;
+            */
+            os << " " << it2->second.discrete_weight;
 
             if (it2->second.deleted) os << " [";
             if (it2->second.deleted) os << "D";

@@ -1368,41 +1368,52 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
         map<int, map<int, GSWEdge> > einsert12; 
         map<int, int> c12_inc;
         map<int, int> stack_locations;
-        //  ^^^      ^^^    
-        //  to       from
+        //  ^^^  ^^^    
+        //  to   from
 
         sort(core_ids.begin(), core_ids.end()); 
         if (nodewalk.size() < core_ids.size()) { cerr << "ERROR! More core ids than nodes." << endl; exit(1); }
         int border=core_ids.back();
+
         // prepare basic structure: copy core nodes and connecting edges from this to s, if s is empty
+        bool nodewalk_empty=0;
         if (s->nodewalk.size() == 0) {
+            nodewalk_empty=1;
+            if (!starting) { 
+                cerr << "Error! Empty nodewalk but not starting." << endl; exit(1); 
+            }
+        }
+
+        if (nodewalk_empty) {
             #ifdef DEBUG
             if (fm::die) {
                 cout << "Initializing new SW (" << activating << ")." << endl;
             }
             #endif
-            for (vector<int>::iterator index = core_ids.begin(); index!=core_ids.end(); index++) {
-                edgemap::iterator from = edgewalk.find(*index);
-                if (from!=edgewalk.end()) {
-                    map<int, GSWEdge>& e1i = from->second;
-                    for (map<int, GSWEdge>::iterator to=e1i.begin(); to!=e1i.end(); to++) {
-                        if (to->first <= border) {
-                            map<Tid, int> weightmap_a; 
-                            map<Tid, int> weightmap_i; 
-                            set<InputNodeLabel> inl;
-                            set<InputEdgeLabel> iel;
-                            GSWNode n = { inl };
-                            GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0 };
-                            s->add_edge(from->first, e, n, 0, &core_ids, &u12);
-                            stack_locations[to->first]=from->first;
-                        }
+        }
+
+        for (vector<int>::iterator index = core_ids.begin(); index!=core_ids.end(); index++) {
+            edgemap::iterator from = edgewalk.find(*index);
+            if (from!=edgewalk.end()) {
+                map<int, GSWEdge>& e1i = from->second;
+                for (map<int, GSWEdge>::iterator to=e1i.begin(); to!=e1i.end(); to++) {
+                    if (to->first <= border) {
+                        map<Tid, int> weightmap_a; 
+                        map<Tid, int> weightmap_i; 
+                        set<InputNodeLabel> inl;
+                        set<InputEdgeLabel> iel;
+                        GSWNode n = { inl };
+                        GSWEdge e = { to->first, iel, weightmap_a, weightmap_i, 0, 0 };
+                        if (nodewalk_empty) s->add_edge(from->first, e, n, 0, &core_ids, &u12);
+                        if (nodewalk_empty || starting) stack_locations[to->first]=from->first;
                     }
                 }
             }
-            s->stack(this,stack_locations);
-            s->activating=activating;
-            //cout << "init to " << s->activating << endl;
-        } 
+        }
+        if (nodewalk_empty || starting) s->stack(this,stack_locations);
+        if (nodewalk_empty) s->activating=activating;
+        //cout << "init to " << s->activating << endl;
+
         
         bool did_ceiling=0;
         stack_locations.clear();
@@ -1861,6 +1872,18 @@ int GSWalk::stack (GSWalk* w, map<int,int> stack_locations) {
             }
         }
     }
+
+    for (edgemap::iterator it= edgewalk.begin(); it!= edgewalk.end(); it++) {
+        for (map<int,GSWEdge>::iterator it2=it->second.begin(); it2!=it->second.end(); it2++) {
+            if (it2->second.discrete_weight>hops) { 
+                cerr << "Error! Edge " << it->first << "->" << it2->first << " has more weight than hops: " << it2->second.discrete_weight << " > " << hops << "." << endl;
+                cout << w << endl;
+                cout << this << endl;
+                exit(1);
+            }
+        }
+    }
+
 }
 
 //! stacks a node n
