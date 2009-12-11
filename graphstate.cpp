@@ -384,12 +384,12 @@ void GraphState::DfsOut(int cur_n, int from_n) {
         const char* str = etab.GetSymbol(inl);
         for(int i = 0; str[i] != '\0'; i++) putchar(str[i]);
     } 
-    else 
+    else {
         const char* str = etab.GetSymbol(inl-150);
-        putchar('[')
+        putchar('[');
         for(int i = 0; str[i] != '\0'; i++) putchar(str[i]);
         putchar('&'); putchar('a');
-        putchar(']')
+        putchar(']');
     }
     int fanout = (int) nodes[cur_n].edges.size ();
     InputEdgeLabel iel;
@@ -539,12 +539,12 @@ void GraphState::to_s ( string& oss ) {
 void GraphState::DfsOut(int cur_n, string& oss, int from_n) {
     InputNodeLabel inl = fm::database->nodelabels[nodes[cur_n].label].inputlabel;
     if (inl<=150) {
-        oss.append(etab.GetSymbol(inl)) 
+        oss.append(etab.GetSymbol(inl));
     }
     else {
-        oss.append("[")
-        oss.append(etab.GetSymbol(inl)) 
-        oss.append("&a]")
+        oss.append("[");
+        oss.append(etab.GetSymbol(inl));
+        oss.append("&a]");
     }
     int fanout = (int) nodes[cur_n].edges.size ();
     InputEdgeLabel iel;
