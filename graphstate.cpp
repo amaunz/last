@@ -380,10 +380,17 @@ void GraphState::print ( GSWalk* gsw, map<Tid, int> weightmap_a, map<Tid, int> w
 
 void GraphState::DfsOut(int cur_n, int from_n) {
     InputNodeLabel inl = fm::database->nodelabels[nodes[cur_n].label].inputlabel;
-    if (inl!=254) {
+    if (inl<=150) {
         const char* str = etab.GetSymbol(inl);
         for(int i = 0; str[i] != '\0'; i++) putchar(str[i]);
-    } else putchar('c'); // output nodelabel
+    } 
+    else 
+        const char* str = etab.GetSymbol(inl-150);
+        putchar('[')
+        for(int i = 0; str[i] != '\0'; i++) putchar(str[i]);
+        putchar('&'); putchar('a');
+        putchar(']')
+    }
     int fanout = (int) nodes[cur_n].edges.size ();
     InputEdgeLabel iel;
     for ( int j = 0; j < fanout; j++ ) {
@@ -531,7 +538,14 @@ void GraphState::to_s ( string& oss ) {
 
 void GraphState::DfsOut(int cur_n, string& oss, int from_n) {
     InputNodeLabel inl = fm::database->nodelabels[nodes[cur_n].label].inputlabel;
-    (inl!=254) ? oss.append( etab.GetSymbol(inl)) : oss.append("c"); // output nodelabel
+    if (inl<=150) {
+        oss.append(etab.GetSymbol(inl)) 
+    }
+    else {
+        oss.append("[")
+        oss.append(etab.GetSymbol(inl)) 
+        oss.append("&a]")
+    }
     int fanout = (int) nodes[cur_n].edges.size ();
     InputEdgeLabel iel;
     for ( int j = 0; j < fanout; j++ ) {
