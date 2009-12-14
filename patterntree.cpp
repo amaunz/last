@@ -887,9 +887,11 @@ GSWalk* PatternTree::expand (pair<float, string> max, const int parent_size) {
     // !STOP: MERGE TO SIBLINGWALK
     if (gsw->to_nodes_ex.size() || siblingwalk->to_nodes_ex.size()) { cerr<<"Error! Already nodes marked as available 5.1. "<<gsw->to_nodes_ex.size()<<" "<<siblingwalk->to_nodes_ex.size()<<endl;exit(1); }
     if (nsign || gsw->activating!=siblingwalk->activating) { // empty sw needs no checks
-          if (siblingwalk->hops>1) {
-                siblingwalk->svd();
-                cout << siblingwalk ; 
+          if (siblingwalk->hops>0) {
+              if (siblingwalk->hops>1) {
+                    siblingwalk->svd();
+              }
+              cout << siblingwalk ; 
           }
           delete siblingwalk;
           siblingwalk = new GSWalk();
@@ -932,8 +934,10 @@ GSWalk* PatternTree::expand (pair<float, string> max, const int parent_size) {
                 #ifdef DEBUG
                 if (fm::die) cout << "STOP CRITERIUM at CHI " << cur_chisq << endl;
                 #endif
-                if (topdown->hops>1) { 
-                    topdown->svd();
+                if (topdown->hops>0) { 
+                    if (topdown->hops>1) { 
+                        topdown->svd();
+                    }
                     cout << topdown;
                 }
             }
