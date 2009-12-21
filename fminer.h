@@ -90,6 +90,7 @@ class Fminer {
     void SetChisqActive(bool val); //!< Set this to 'true' to enable chi-square filter.
     void SetChisqSig(float _chisq_val); //!< Set significance threshold here (between 0 and 1).
     void SetLineNrs(bool val); //!< Set 'true' here to enable line numbers in the output file.
+    void SetRegression(bool var) {};
     //@}
     
     /** @name Others
