@@ -1628,7 +1628,7 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
 
 
             // Decide which edge to insert, then do it!
-            if ( it21 != einsert21.end() || it12 != einsert12.end() ) {
+            if ( it21 != einsert21.end() || it12 != einsert12.end() && !do_ceiling) {
                 bool insertion_done = 0;
                 if (it21 != einsert21.end()) {
                     // equal: direction should be 0 (siblingwalk dominance), so we merge from left to right and from top to down (in this order)
@@ -1951,7 +1951,7 @@ void GSWalk::add_edge (int f, GSWEdge e, GSWNode n, bool reorder, vector<int>* c
         if (fm::die) cout << "to in core range (" << e.to << ")." << endl; 
         #endif
     }
-    if (reorder && find(core_ids->begin(), core_ids->end(), e.to) != core_ids->end()) { cerr << "Error! e.to is a core-id." << endl; exit(1); }
+    if (reorder && find(core_ids->begin(), core_ids->end(), e.to) != core_ids->end()) { cerr << "Error! e.to (" << e.to << ") is a core-id." << endl; exit(1); }
 
     if (reorder) { // 'hard' insertion: reorder edges by moving 1 up
 
