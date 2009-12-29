@@ -1606,7 +1606,10 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
             else next_to=core_ids.back()+1;
             int c=0;
             
-            // Insert lowest conflict edge!
+            
+                // BUG: NEED TO REPEAT UNTIL NO MORE MATCHING ITC MEMBERS
+                /*
+                // Insert lowest conflict edge!
             if (itc != c12_inc.end()) {
                 if ( (it21 == einsert21.end()) || (itc->first < it21->first) ) {
                     if ( (it12 == einsert12.end()) || (itc->first < it12->first) ) {
@@ -1625,10 +1628,36 @@ int GSWalk::conflict_resolution (vector<int> core_ids, GSWalk* s, bool starting,
                 }
                 if (u12.size()) next_to= maxi((*(--u12.end()))+1, core_ids.back()+1);
             }
+                */
+                // END: NEED TO REPEAT
+
+
+                // Previous version did not capture the case of multiple itc members being lowest: now while loop.
+                while(  ( itc != c12_inc.end() ) &&
+                        ( (it21 == einsert21.end()) || (itc->first < it21->first) )  &&
+                        ( (it12 == einsert12.end()) || (itc->first < it12->first) ) 
+                     ) {
+                         if (itc->first>next_to) { 
+                             do_ceiling=1; c=itc->first; 
+                             #ifdef DEBUG
+                             cout << "1) NEXT TO < " << itc->first << endl;
+                             #endif
+                             break; // !
+                         }
+                         else { 
+                             // AM: remember itc->first (to) and itc->second (from)
+                             stack_locations[itc->first]=itc->second;
+                             u12.insert(itc->first);
+                             itc++;   // need to step to the next element
+                         }
+                }
+                if (u12.size()) next_to= maxi((*(--u12.end()))+1, core_ids.back()+1);
+
+
 
 
             // Decide which edge to insert, then do it!
-            if ( it21 != einsert21.end() || it12 != einsert12.end() && !do_ceiling) {
+            if ( (it21 != einsert21.end() || it12 != einsert12.end()) && !do_ceiling ) {
                 bool insertion_done = 0;
                 if (it21 != einsert21.end()) {
                     // equal: direction should be 0 (siblingwalk dominance), so we merge from left to right and from top to down (in this order)
@@ -2107,9 +2136,10 @@ void GSWalk::svd () {
     #endif
 
     // SVD
-        gsl_vector* w = gsl_vector_calloc (adj_m_size);
-    gsl_linalg_SV_decomp (A,V,s,w);
-        gsl_vector_free(w);
+        //gsl_vector* w = gsl_vector_calloc (adj_m_size);
+    //gsl_linalg_SV_decomp (A,V,s,w);
+        //gsl_vector_free(w);
+    gsl_linalg_SV_decomp_jacobi (A,V,s);
 
     // Determine CUTOFF in s
     if (gsl_vector_get(s,0) == 0.0) adj_m_sing=1;
