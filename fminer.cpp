@@ -153,6 +153,7 @@ bool Fminer::GetMostSpecTreesOnly(){return fm::most_specific_trees_only;}
 bool Fminer::GetChisqActive(){return fm::chisq->active;}
 float Fminer::GetChisqSig(){return fm::chisq->sig;}
 bool Fminer::GetLineNrs() {return fm::line_nrs;}
+bool Fminer::GetRegression() {return false;}
 
 
 
@@ -249,6 +250,10 @@ void Fminer::SetChisqSig(float _chisq_val) {
 
 void Fminer::SetLineNrs(bool val) {
     fm::line_nrs = val;
+}
+
+void Fminer::SetRegression(bool val) {
+    return;
 }
 
 

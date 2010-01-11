@@ -70,6 +70,8 @@ class Fminer {
     bool GetChisqActive(); //!< Get whether chi-square filter is active.
     float GetChisqSig(); //!< Get significance threshold.
     bool GetLineNrs(); //!< Get whether line numbers should be used in the output file.
+    bool GetRegression(); //!< Dummy method for regression (only used for bbrcs).
+
     //@}
 
     /** @name Setters
@@ -90,7 +92,7 @@ class Fminer {
     void SetChisqActive(bool val); //!< Set this to 'true' to enable chi-square filter.
     void SetChisqSig(float _chisq_val); //!< Set significance threshold here (between 0 and 1).
     void SetLineNrs(bool val); //!< Set 'true' here to enable line numbers in the output file.
-    void SetRegression(bool var) {};
+    void SetRegression(bool val); //!< Dummy method for regression (only used for bbrcs).
     //@}
     
     /** @name Others
