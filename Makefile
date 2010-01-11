@@ -33,7 +33,7 @@ LDFLAGS_GSL  =
 LDFLAGS_GSL  =   
 
 # FOR RUBY TARGET: ADJUST COMPILER PATH TO RUBY HEADERS (LINUX)
-INCLUDE_RB  =  -I/usr/lib/ruby/1.8/i486-linux
+INCLUDE_RB  = -I/usr/lib/ruby/1.8/i486-linux
 
 # FOR LINUX: INSTALL TARGET DIRECTORY
 DESTDIR       = /usr/local/lib/
