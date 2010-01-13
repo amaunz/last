@@ -102,7 +102,7 @@ class Fminer {
     vector<string>* MineRoot(unsigned int j); //!< Mine fragments rooted at the j-th root node (element type).
     void ReadGsp(FILE* gsp); //!< Read in a gSpan file
     bool AddCompound(string smiles, unsigned int comp_id); //!< Add a compound to the database.
-    bool AddActivity(bool act, unsigned int comp_id); //!< Add an activity to the database.
+    bool AddActivity(float act, unsigned int comp_id); //!< Add an activity to the database.
     int GetNoRootNodes() {return fm::database->nodelabels.size();} //!< Get number of root nodes (different element types).
     int GetNoCompounds() {return fm::database->trees.size();} //!< Get number of compounds in the database.
     //@}
